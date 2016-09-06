@@ -5,14 +5,19 @@
 
 'use strict'
 
+var _ = require('underscore');
 var fs = require('fs');
 var PNG = require('pngjs').PNG;
 
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.9;
-var SYSTEM_COUNT = 100000;
-var BOUNDARY = 800;
+var SYSTEM_COUNT = 1000000;
+var BOUNDARY = 10000;
 var BOUNDARY_ = -1 * BOUNDARY;
+
+var BLACKHOLE_RADIUS = 35;
+
+var INITIAL_POS = 800; //Math.max(SYSTEM_COUNT * 0.001, 40);
 
 ////////////////////////////////////////////////////////////
 // Generators
@@ -31,8 +36,8 @@ function shuffleArray(d) {
 }
 
 function inCircle(center_x, center_y, radius, x, y) {
-  var dist = Math.sqrt(Math.pow(center_x - x, 2) + Math.pow(center_y - y, 2));
-  return dist <= radius
+  var dist = Math.pow(center_x - x, 2) + Math.pow(center_y - y, 2);
+  return dist <= Math.pow(radius, 2);
 }
 
 function generateName(length) {
@@ -48,11 +53,28 @@ function generateName(length) {
   return name;
 }
 
+var STELLAR_TYPES = [ { class: 'O', color: [ 50, 50, 255 ], size: 'giant', occurrence: 0.0000003 },
+                      { class: 'B', color: [ 100, 100, 255 ], size: 'giant', occurrence: 0.00125 },
+                      { class: 'A', color: [ 151, 200, 232 ], size: 'normal', occurrence: 0.00625},
+                      { class: 'F', color: [ 255, 255, 255 ], size: 'normal', occurrence: 0.0303 },
+                      { class: 'G', color: [ 200, 200, 0 ], size: 'normal', occurrence: 0.075 },
+                      { class: 'K', color: [ 255, 127, 0 ], size: 'normal', occurrence: 0.12, },
+                      { class: 'M', color: [ 200, 0, 0 ], size: 'giant', occurrence: 0.76 } ];
 
 function stellarGenerator() {
-  var sun = {
-    class: 0
-  };
+  var accuracy = 10000000;
+  var type = random(0, accuracy);
+  var index = STELLAR_TYPES.length - 1;
+
+  for (var i = 0, perc = 0; i < STELLAR_TYPES.length; i++) {
+    perc += Math.ceil(accuracy * STELLAR_TYPES[i].occurrence);
+    if (type < perc) {
+      index = i;
+      break;
+    }
+  }
+
+  var sun = _.clone(STELLAR_TYPES[index]);
   return sun;
 }
 
@@ -106,7 +128,8 @@ function Universe() {
       return false;
     }
 
-    if (inCircle(0, 0, 25, x, y)) {
+    if (Math.abs(x) < BLACKHOLE_RADIUS && Math.abs(y) < BLACKHOLE_RADIUS &&
+        inCircle(0, 0, BLACKHOLE_RADIUS, x, y)) {
       return false;
     }
     /*
@@ -117,9 +140,11 @@ function Universe() {
     return true;
   }
 
-  var initialX = 250;//random(BOUNDARY_, BOUNDARY);
-  var initialY = 250;//random(BOUNDARY_, BOUNDARY);
+  var initialX = INITIAL_POS;//random(BOUNDARY_, BOUNDARY);
+  var initialY = INITIAL_POS;//random(BOUNDARY_, BOUNDARY);
   var initial = systemGenerator(initialX, initialY);
+
+  var printPercentages = [ 0.25, 0.5, 0.75, 1 ];
 
   console.log(initialX, initialY);
 
@@ -152,8 +177,8 @@ function Universe() {
     var cornerY = neighbor.position.y - PLANETARY_DISTANCE;
     var dist = PLANETARY_DISTANCE * 2;
 
-    for (var x = cornerX; x < cornerX + dist; x++) {
-      for (var y = cornerY; y < cornerY + dist; y++) {
+    for (var x = cornerX; x < (cornerX + dist); x++) {
+      for (var y = cornerY; y < (cornerY + dist); y++) {
         if (safePosition(x,y) && !getPosition(x, y)) {
           candidates.push({
             x: x,
@@ -165,7 +190,8 @@ function Universe() {
     }
     //console.log(candidates);
 
-    candidates = candidates.sort(); //shuffleArray(candidates);
+    //candidates = candidates.sort();
+    //candidates = shuffleArray(candidates);
 
     if (candidates.length < clusterCount) {
       i--;
@@ -188,6 +214,13 @@ function Universe() {
       if (i % 100 === 0) {
         process.stdout.write('\u001b[36m.\u001b[0m');
       }
+
+      for (var p = 0; p < printPercentages.length; p++) {
+        if (i === Math.floor((SYSTEM_COUNT - 1) * printPercentages[p])) {
+          process.stdout.write((printPercentages[p] * 100) + '%');
+          break;
+        }
+      }
     }
 
   }
@@ -207,13 +240,13 @@ var offset = 0;
 for (var y = universe.minY; y < universe.maxY; y++) {
 
   for (var x = universe.minX; x < universe.maxX; x++) {
-
-    if (universe.positions[x + ',' + y]) {
+    var system = universe.positions[x + ',' + y];
+    if (system) {
       //process.stdout.write('#');
 
-      data[offset] = 255;
-      data[offset+1] = 255;
-      data[offset+2] = 255;
+      data[offset] = system.sun.color[0];
+      data[offset+1] = system.sun.color[1];
+      data[offset+2] = system.sun.color[2];
       data[offset+3] = 255;
     } else {
       //process.stdout.write(' ');
