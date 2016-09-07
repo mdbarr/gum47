@@ -10,14 +10,12 @@ var fs = require('fs');
 var PNG = require('pngjs').PNG;
 
 var PLANETARY_DISTANCE = 4;
-var CLUSTER_STRENGTH = 0.9;
-var SYSTEM_COUNT = 1000000;
+var CLUSTER_STRENGTH = 0.8;
+var SYSTEM_COUNT = 1200000;
 var BOUNDARY = 10000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
-var BLACKHOLE_RADIUS = 30;
-
-var INITIAL_POS = 800; //Math.max(SYSTEM_COUNT * 0.001, 40);
+var INITIAL_POS = 0;
 
 ////////////////////////////////////////////////////////////
 // Generators
@@ -45,7 +43,7 @@ var SYLLABLES = ["a", "ab", "ad", "af", "ag", "ah", "ak", "al", "am", "an", "ang
 var NAME_HASH = { };
 
 function generateWord(length) {
-  var syllableCount = length || random(2, 7);
+  var syllableCount = length || random(2, 8);
 
   var word = '';
   for (var i = 0; i < syllableCount; i++) {
@@ -66,13 +64,10 @@ function generateName() {
     name = generateWord(); //+ ' ' + generateWord();
 
     clash = (NAME_HASH[name]) ? true : false;
-
-    if(clash) {
-      //console.log('CLASH', name);
-    }
   }
+
   NAME_HASH[name] = true;
-  //console.log(name);
+
   return name;
 }
 
@@ -145,7 +140,7 @@ function systemGenerator(x, y) {
 
 ////////////////////////////////////////////////////////////
 
-function Universe() {
+function Galaxy() {
   var self = this;
 
   self.systems = [];
@@ -168,10 +163,12 @@ function Universe() {
       return false;
     }
 
+    /*
     if (Math.abs(x) < BLACKHOLE_RADIUS && Math.abs(y) < BLACKHOLE_RADIUS &&
         inCircle(0, 0, BLACKHOLE_RADIUS, x, y)) {
       return false;
     }
+    */
     /*
     if ((x > -50 && x < 50) && (y > -50 && y < 50)) {
       return false;
@@ -186,8 +183,7 @@ function Universe() {
 
   var printPercentages = [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ];
 
-  console.log(initialX, initialY);
-
+  printPercentages = _.range(0.1, 1, 0.1);
   self.systems.push(initial);
   setPosition(initialX, initialY, initial);
 
@@ -198,7 +194,7 @@ function Universe() {
 
   var clusterCount = Math.floor(Math.pow(PLANETARY_DISTANCE * 2, 2) * CLUSTER_STRENGTH);
 
-  process.stdout.write('\nGenerating universe');
+  console.log('Generating galaxy:');
 
   var possibilities = self.systems.slice(0);
 
@@ -209,6 +205,8 @@ function Universe() {
 
     if (!neighbor) {
       console.log('FAULT', index, possibilities.length);
+      i--;
+      continue;
     }
 
     var candidates = [];
@@ -219,19 +217,12 @@ function Universe() {
 
     for (var x = cornerX; x < (cornerX + dist); x++) {
       for (var y = cornerY; y < (cornerY + dist); y++) {
-        if (safePosition(x,y) && !getPosition(x, y)) {
-          candidates.push({
-            x: x,
-            y: y
-          })
+        if (safePosition(x,y) && !getPosition(x, y) &&
+            !inCircle(neighbor.position.x, neighbor.position.y, 1.2, x, y)) {
+          candidates.push({ x: x, y: y });
         }
-
       }
     }
-    //console.log(candidates);
-
-    //candidates = candidates.sort();
-    //candidates = shuffleArray(candidates);
 
     if (candidates.length < clusterCount) {
       i--;
@@ -244,8 +235,6 @@ function Universe() {
 
       possibilities.push(newSystem);
 
-      //console.log(newSystem);
-
       self.minX = Math.min(self.minX, position.x);
       self.minY = Math.min(self.minY, position.y);
       self.maxX = Math.max(self.maxX, position.x);
@@ -257,7 +246,7 @@ function Universe() {
 
       for (var p = 0; p < printPercentages.length; p++) {
         if (i === Math.floor((SYSTEM_COUNT - 1) * printPercentages[p])) {
-          process.stdout.write((printPercentages[p] * 100) + '%');
+          process.stdout.write(Math.round(printPercentages[p] * 100) + '%');
           break;
         }
       }
@@ -269,28 +258,24 @@ function Universe() {
 
 ////////////////////////////////////////////////////////////
 
-var universe = new Universe();
-var width = Math.abs(universe.maxX - universe.minX);
-var height = Math.abs(universe.maxY - universe.minY);
+var galaxy = new Galaxy();
+var width = Math.abs(galaxy.maxX - galaxy.minX);
+var height = Math.abs(galaxy.maxY - galaxy.minY);
 var data = new Buffer(width * height * 4);
 
-console.log("%s, %s to %s, %s (%sx%s)", universe.minY, universe.minX, universe.maxX, universe.maxY, width, height);
+console.log("%s, %s to %s, %s (%sx%s)", galaxy.minY, galaxy.minX, galaxy.maxX, galaxy.maxY, width, height);
 
 var offset = 0;
-for (var y = universe.minY; y < universe.maxY; y++) {
+for (var y = galaxy.minY; y < galaxy.maxY; y++) {
 
-  for (var x = universe.minX; x < universe.maxX; x++) {
-    var system = universe.positions[x + ',' + y];
+  for (var x = galaxy.minX; x < galaxy.maxX; x++) {
+    var system = galaxy.positions[x + ',' + y];
     if (system) {
-      //process.stdout.write('#');
-
       data[offset] = system.sun.color[0];
       data[offset+1] = system.sun.color[1];
       data[offset+2] = system.sun.color[2];
       data[offset+3] = 255;
     } else {
-      //process.stdout.write(' ');
-
       data[offset] = 0;
       data[offset+1] = 0;
       data[offset+2] = 0;
@@ -298,7 +283,6 @@ for (var y = universe.minY; y < universe.maxY; y++) {
     }
     offset += 4;
   }
-  //process.stdout.write('\n');
 }
 
 var png = new PNG();
@@ -306,4 +290,4 @@ png.width = width;
 png.height = height;
 png.data = data
 
-png.pack().pipe(fs.createWriteStream('universe.png'));
+png.pack().pipe(fs.createWriteStream('galaxy.png'));
