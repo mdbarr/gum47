@@ -8,7 +8,6 @@
 var _ = require('underscore');
 var fs = require('fs');
 var PNG = require('pngjs').PNG;
-var uuid = require('node-uuid');
 
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.8;
@@ -26,8 +25,9 @@ function inCircle(center_x, center_y, radius, x, y) {
 ////////////////////////////////////////////////////////////
 // Generators
 
+var GLOBAL_ID_COUNT = 0;
 function idGenerator() {
-  return uuid.v4();
+  return ('00000000' + (GLOBAL_ID_COUNT++).toString(16)).slice(-8).replace(/(....)(....)/, '$1-$2');
 }
 
 var SYLLABLES = ["a", "ab", "ad", "af", "ag", "ah", "ak", "al", "am", "an", "ang", "ap", "ar", "as", "ash", "at", "ath", "av", "aw", "ay", "az", "ba", "be", "bi", "bla", "ble", "bli", "blo", "blu", "bo", "bra", "bre", "bri", "bro", "bru", "bu", "ce", "cla", "cle", "cli", "clo", "clu", "cra", "cro", "cru", "da", "de", "di", "do", "dra", "dre", "dri", "dro", "dru", "du", "e", "eb", "ed", "ef", "eg", "eh", "ek", "el", "em", "en", "eng", "ep", "er", "es", "esh", "et", "eth", "ev", "ew", "ey", "ez", "fa", "fe", "fi", "fla", "fle", "fli", "flo", "flu", "fo", "fra", "fre", "fri", "fro", "fru", "fu", "ga", "ge", "gi", "gla", "gle", "gli", "glo", "glu", "go", "gra", "gre", "gri", "gro", "gru", "gu", "ha", "he", "hi", "ho", "hu", "i", "ib", "id", "if", "ig", "ih", "ik", "il", "im", "in", "ing", "ip", "ir", "is", "ish", "it", "ith", "iv", "iw", "iy", "iz", "ka", "ke", "ki", "kla", "kle", "kli", "klo", "klu", "ko", "kra", "kre", "kri", "kro", "kru", "ku", "la", "le", "li", "lo", "lu", "ly", "ma", "me", "mi", "mo", "mu", "na", "ne", "ni", "no", "nu", "o", "ob", "od", "of", "og", "oh", "ok", "ol", "om", "on", "ong", "op", "or", "os", "osh", "ot", "oth", "ov", "ow", "oy", "oz", "pa", "pe", "pi", "pla", "ple", "pli", "plo", "plu", "po", "pra", "pre", "pri", "pro", "pru", "pu", "ra", "re", "ri", "ro", "ru", "sa", "se", "sha", "she", "shi", "sho", "shu", "si", "sla", "sle", "sli", "slo", "slu", "so", "su", "ta", "te", "tha", "the", "thi", "tho", "thra", "thre", "thri", "thro", "thru", "thu", "thy", "ti", "to", "tra", "tre", "tri", "tro", "tru", "tu", "u", "ub", "ud", "uf", "ug", "uh", "uk", "ul", "um", "un", "ung", "up", "ur", "us", "ush", "ut", "uth", "uv", "uw", "uy", "uz", "va", "ve", "vi", "vla", "vle", "vli", "vlo", "vlu", "vo", "vra", "vre", "vri", "vro", "vru", "vu", "wa", "we", "wi", "wo", "wra", "wre", "wri", "wro", "wru", "wu", "ya", "ye", "yi", "yl", "yo", "yth", "yu", "za", "ze", "zi", "zla", "zle", "zli", "zlo", "zlu", "zo", "zra", "zre", "zri", "zro", "zru", "zu"];
@@ -185,7 +185,7 @@ function Galaxy() {
   self.maxX = 0;
   self.maxY = 0;
 
-  var clusterCount = Math.floor(Math.pow(PLANETARY_DISTANCE * 2, 2) * CLUSTER_STRENGTH);
+  var clusterCount = Math.floor(Math.pow((PLANETARY_DISTANCE * 2) + 1, 2) * CLUSTER_STRENGTH);
 
   console.log('Generating galaxy:');
 
@@ -199,6 +199,7 @@ function Galaxy() {
     if (!neighbor) {
       console.log('FAULT', index, possibilities.length);
       i--;
+      possibilities.splice(index, 1);
       continue;
     }
 
@@ -208,8 +209,8 @@ function Galaxy() {
     var cornerY = neighbor.position.y - PLANETARY_DISTANCE;
     var dist = PLANETARY_DISTANCE * 2;
 
-    for (var x = cornerX; x < (cornerX + dist); x++) {
-      for (var y = cornerY; y < (cornerY + dist); y++) {
+    for (var x = cornerX; x <= (cornerX + dist); x++) {
+      for (var y = cornerY; y <= (cornerY + dist); y++) {
         if (safePosition(x,y) && !getPosition(x, y) &&
             !inCircle(neighbor.position.x, neighbor.position.y, 1.2, x, y)) {
           candidates.push({ x: x, y: y });
@@ -220,6 +221,7 @@ function Galaxy() {
     if (candidates.length < clusterCount) {
       i--;
       possibilities.splice(index, 1);
+      continue;
     } else {
       var position = candidates[_.random(0, candidates.length - 1)];
       var newSystem = systemGenerator(position.x, position.y);
@@ -244,7 +246,6 @@ function Galaxy() {
         }
       }
     }
-
   }
   process.stdout.write('\n');
 }
