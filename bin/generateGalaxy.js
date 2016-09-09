@@ -8,60 +8,52 @@
 var _ = require('underscore');
 var fs = require('fs');
 var PNG = require('pngjs').PNG;
+var uuid = require('node-uuid');
 
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.8;
-var SYSTEM_COUNT = 1200000;
+var SYSTEM_COUNT = 250000;
 var BOUNDARY = 10000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
 var INITIAL_POS = 0;
-
-////////////////////////////////////////////////////////////
-// Generators
-function random(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function shuffleArray(d) {
-  for (var c = d.length - 1; c > 0; c--) {
-    var b = Math.floor(Math.random() * (c + 1));
-    var a = d[c];
-    d[c] = d[b];
-    d[b] = a;
-  }
-  return d
-}
 
 function inCircle(center_x, center_y, radius, x, y) {
   var dist = Math.pow(center_x - x, 2) + Math.pow(center_y - y, 2);
   return dist <= Math.pow(radius, 2);
 }
 
+////////////////////////////////////////////////////////////
+// Generators
+
+function idGenerator() {
+  return uuid.v4();
+}
+
 var SYLLABLES = ["a", "ab", "ad", "af", "ag", "ah", "ak", "al", "am", "an", "ang", "ap", "ar", "as", "ash", "at", "ath", "av", "aw", "ay", "az", "ba", "be", "bi", "bla", "ble", "bli", "blo", "blu", "bo", "bra", "bre", "bri", "bro", "bru", "bu", "ce", "cla", "cle", "cli", "clo", "clu", "cra", "cro", "cru", "da", "de", "di", "do", "dra", "dre", "dri", "dro", "dru", "du", "e", "eb", "ed", "ef", "eg", "eh", "ek", "el", "em", "en", "eng", "ep", "er", "es", "esh", "et", "eth", "ev", "ew", "ey", "ez", "fa", "fe", "fi", "fla", "fle", "fli", "flo", "flu", "fo", "fra", "fre", "fri", "fro", "fru", "fu", "ga", "ge", "gi", "gla", "gle", "gli", "glo", "glu", "go", "gra", "gre", "gri", "gro", "gru", "gu", "ha", "he", "hi", "ho", "hu", "i", "ib", "id", "if", "ig", "ih", "ik", "il", "im", "in", "ing", "ip", "ir", "is", "ish", "it", "ith", "iv", "iw", "iy", "iz", "ka", "ke", "ki", "kla", "kle", "kli", "klo", "klu", "ko", "kra", "kre", "kri", "kro", "kru", "ku", "la", "le", "li", "lo", "lu", "ly", "ma", "me", "mi", "mo", "mu", "na", "ne", "ni", "no", "nu", "o", "ob", "od", "of", "og", "oh", "ok", "ol", "om", "on", "ong", "op", "or", "os", "osh", "ot", "oth", "ov", "ow", "oy", "oz", "pa", "pe", "pi", "pla", "ple", "pli", "plo", "plu", "po", "pra", "pre", "pri", "pro", "pru", "pu", "ra", "re", "ri", "ro", "ru", "sa", "se", "sha", "she", "shi", "sho", "shu", "si", "sla", "sle", "sli", "slo", "slu", "so", "su", "ta", "te", "tha", "the", "thi", "tho", "thra", "thre", "thri", "thro", "thru", "thu", "thy", "ti", "to", "tra", "tre", "tri", "tro", "tru", "tu", "u", "ub", "ud", "uf", "ug", "uh", "uk", "ul", "um", "un", "ung", "up", "ur", "us", "ush", "ut", "uth", "uv", "uw", "uy", "uz", "va", "ve", "vi", "vla", "vle", "vli", "vlo", "vlu", "vo", "vra", "vre", "vri", "vro", "vru", "vu", "wa", "we", "wi", "wo", "wra", "wre", "wri", "wro", "wru", "wu", "ya", "ye", "yi", "yl", "yo", "yth", "yu", "za", "ze", "zi", "zla", "zle", "zli", "zlo", "zlu", "zo", "zra", "zre", "zri", "zro", "zru", "zu"];
 
 var NAME_HASH = { };
 
-function generateWord(length) {
-  var syllableCount = length || random(2, 8);
+function wordGenerator(length) {
+  var syllableCount = length || _.random(2, 8);
 
   var word = '';
   for (var i = 0; i < syllableCount; i++) {
-    word += SYLLABLES[random(0, SYLLABLES.length - 1)];
+    word += SYLLABLES[_.random(0, SYLLABLES.length - 1)];
   }
   word = word.charAt(0).toUpperCase() + word.slice(1);
 
   return word;
 }
 
-function generateName() {
+function nameGenerator() {
   var clash = true;
   var name;
 
 
   while (clash)  {
 
-    name = generateWord(); //+ ' ' + generateWord();
+    name = wordGenerator(); //+ ' ' + wordGenerator();
 
     clash = (NAME_HASH[name]) ? true : false;
   }
@@ -89,7 +81,7 @@ var STELLAR_COLORS = { 'O': [ 50, 50, 255 ],
 
 function stellarGenerator() {
   var accuracy = 10000000;
-  var type = random(0, accuracy);
+  var type = _.random(0, accuracy);
   var index = STELLAR_TYPES.length - 1;
 
   for (var i = 0, perc = 0; i < STELLAR_TYPES.length; i++) {
@@ -114,6 +106,7 @@ var PLANET_NUMERALS = [ 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 
 
 function planetGenerator(system, index) {
   var planet = {
+    id: idGenerator(),
     name: system.name + ' ' + PLANET_NUMERALS[index]
   };
 
@@ -122,7 +115,8 @@ function planetGenerator(system, index) {
 
 function systemGenerator(x, y) {
   var system = {
-    name: generateName(),
+    id: idGenerator(),
+    name: nameGenerator(),
     sun: stellarGenerator(),
     planets: [],
     position: {
@@ -131,7 +125,7 @@ function systemGenerator(x, y) {
     }
   };
 
-  var planetCount = random(1, 10);
+  var planetCount = _.random(1, 10);
   for (var i = 0; i < planetCount; i++) {
     system.planets.push(planetGenerator(system, i));
   }
@@ -177,13 +171,12 @@ function Galaxy() {
     return true;
   }
 
-  var initialX = INITIAL_POS;//random(BOUNDARY_, BOUNDARY);
-  var initialY = INITIAL_POS;//random(BOUNDARY_, BOUNDARY);
+  var initialX = INITIAL_POS;
+  var initialY = INITIAL_POS;
   var initial = systemGenerator(initialX, initialY);
 
   var printPercentages = [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 ];
 
-  printPercentages = _.range(0.1, 1, 0.1);
   self.systems.push(initial);
   setPosition(initialX, initialY, initial);
 
@@ -199,8 +192,8 @@ function Galaxy() {
   var possibilities = self.systems.slice(0);
 
   for (var i = 0; i < SYSTEM_COUNT; i++) {
-    var distace = random(1, PLANETARY_DISTANCE);
-    var index = random(0, possibilities.length - 1);
+    var distace = _.random(1, PLANETARY_DISTANCE);
+    var index = _.random(0, possibilities.length - 1);
     var neighbor = possibilities[index];
 
     if (!neighbor) {
@@ -228,7 +221,7 @@ function Galaxy() {
       i--;
       possibilities.splice(index, 1);
     } else {
-      var position = candidates[random(0, candidates.length - 1)];
+      var position = candidates[_.random(0, candidates.length - 1)];
       var newSystem = systemGenerator(position.x, position.y);
       setPosition(position.x, position.y, newSystem);
       self.systems.push(newSystem);
