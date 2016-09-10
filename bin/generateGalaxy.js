@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/node --max-old-space-size=8192
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -12,7 +12,7 @@ var PNG = require('pngjs').PNG;
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.8;
 var SYSTEM_COUNT = 250000;
-var BOUNDARY = 10000;
+var BOUNDARY = 20000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
 var INITIAL_POS = 0;
@@ -285,3 +285,5 @@ png.height = height;
 png.data = data
 
 png.pack().pipe(fs.createWriteStream('galaxy.png'));
+
+console.log('%s systems generated.', galaxy.systems.length);
