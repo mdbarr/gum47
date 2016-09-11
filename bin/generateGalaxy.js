@@ -1,4 +1,4 @@
-#!/usr/bin/node --max-old-space-size=1024
+#!/usr/bin/node --max-old-space-size=1500
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -11,7 +11,7 @@ var PNG = require('pngjs').PNG;
 
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.80;
-var SYSTEM_COUNT = 1000000;
+var SYSTEM_COUNT = 3500000;
 var BOUNDARY = 20000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
@@ -27,6 +27,7 @@ function inCircle(center_x, center_y, radius, x, y) {
 
 var GLOBAL_ID_COUNT = 0;
 function idGenerator() {
+  return null;
   return ('00000000' + (GLOBAL_ID_COUNT++).toString(16)).slice(-8).replace(/(....)(....)/, '$1-$2');
 }
 
@@ -124,11 +125,12 @@ function systemGenerator(x, y) {
       y: y
     }
   };
-
+  /*
   var planetCount = _.random(1, 10);
   for (var i = 0; i < planetCount; i++) {
     system.planets.push(planetGenerator(system, i));
   }
+  */
   return system;
 }
 
@@ -220,7 +222,7 @@ function Galaxy() {
   console.log('Generating galaxy:');
 
   for (var i = 0; i < 12; i++) {
-    spiralGenerator(initialX, initialY, 1250, 1.5, 360 * i);
+    spiralGenerator(initialX, initialY, 2200, 1.5, 360 * i);
   }
 
   var possibilities = self.systems.slice(0);
@@ -304,9 +306,9 @@ for (var y = galaxy.minY; y < galaxy.maxY; y++) {
       data[offset+2] = system.sun.color[2];
       data[offset+3] = 255;
     } else {
-      data[offset] = 0;
-      data[offset+1] = 0;
-      data[offset+2] = 0;
+      data[offset] = 5;
+      data[offset+1] = 5;
+      data[offset+2] = 20;
       data[offset+3] = 255;
     }
     offset += 4;

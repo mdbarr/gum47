@@ -86,7 +86,7 @@ function spiralGenerator(centerX, centerY, radius, coils, rotation) {
 plotPoint(0, 0);
 
 for (var i = 0; i < 12; i++) {
-  spiralGenerator(0, 0, 1250, 1.5, 360 * i);
+  spiralGenerator(0, 0, _.random(1000, 1250), _.random(0.5, 2), 360 * i);
 }
 
 ////////////////////////////////////////////////////////////
@@ -114,9 +114,9 @@ for (var y = minY; y < maxY; y++) {
       data[offset+3] = 255;
       count++;
     } else {
-      data[offset] = 0;
-      data[offset+1] = 0;
-      data[offset+2] = 0;
+      data[offset] = 5;
+      data[offset+1] = 5;
+      data[offset+2] = 20;
       data[offset+3] = 255;
     }
     offset += 4;
