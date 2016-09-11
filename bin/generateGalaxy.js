@@ -15,6 +15,11 @@ var SYSTEM_COUNT = 3500000;
 var BOUNDARY = 20000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
+var SPIRAL = true;
+var SPIRAL_COUNT = 12;
+var SPIRAL_DISTANCE = 2200;
+var SPIRAL_COILS = 1.5;
+
 var INITIAL_POS = 0;
 
 function inCircle(center_x, center_y, radius, x, y) {
@@ -173,6 +178,19 @@ function Galaxy() {
     return true;
   }
 
+  function createSystem(position) {
+    var newSystem = systemGenerator(position.x, position.y);
+    setPosition(position.x, position.y, newSystem);
+    self.systems.push(newSystem);
+
+    self.minX = Math.min(self.minX, position.x);
+    self.minY = Math.min(self.minY, position.y);
+    self.maxX = Math.max(self.maxX, position.x);
+    self.maxY = Math.max(self.maxY, position.y);
+
+    return newSystem
+  }
+
   function spiralGenerator(centerX, centerY, radius, coils, rotation) {
     var thetaMax = coils * 2 * Math.PI;
 
@@ -188,14 +206,7 @@ function Galaxy() {
 
       var position = { x: x, y: y };
 
-      var newSystem = systemGenerator(position.x, position.y);
-      setPosition(position.x, position.y, newSystem);
-      self.systems.push(newSystem);
-
-      self.minX = Math.min(self.minX, position.x);
-      self.minY = Math.min(self.minY, position.y);
-      self.maxX = Math.max(self.maxX, position.x);
-      self.maxY = Math.max(self.maxY, position.y);
+      createSystem(position);
 
       var delta = ( -2 * away + Math.sqrt ( 4 * away * away + 8 * awayStep * chord ) ) /
           ( 2 * awayStep );
@@ -221,8 +232,13 @@ function Galaxy() {
 
   console.log('Generating galaxy:');
 
-  for (var i = 0; i < 12; i++) {
-    spiralGenerator(initialX, initialY, 2200, 1.5, 360 * i);
+  if (SPIRAL) {
+    for (var i = 0; i < SPIRAL_COUNT; i++) {
+      spiralGenerator(initialX, initialY,
+                      SPIRAL_DISTANCE,
+                      SPIRAL_COILS,
+                      360 * i);
+    }
   }
 
   var possibilities = self.systems.slice(0);
@@ -260,16 +276,9 @@ function Galaxy() {
       continue;
     } else {
       var position = candidates[_.random(0, candidates.length - 1)];
-      var newSystem = systemGenerator(position.x, position.y);
-      setPosition(position.x, position.y, newSystem);
-      self.systems.push(newSystem);
 
+      var newSystem = createSystem(position);
       possibilities.push(newSystem);
-
-      self.minX = Math.min(self.minX, position.x);
-      self.minY = Math.min(self.minY, position.y);
-      self.maxX = Math.max(self.maxX, position.x);
-      self.maxY = Math.max(self.maxY, position.y);
 
       if (i % 100 === 0) {
         process.stdout.write('\u001b[36m.\u001b[0m');
