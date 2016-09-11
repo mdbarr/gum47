@@ -1,4 +1,4 @@
-#!/usr/bin/node --max-old-space-size=8192
+#!/usr/bin/node --max-old-space-size=1024
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -10,8 +10,8 @@ var fs = require('fs');
 var PNG = require('pngjs').PNG;
 
 var PLANETARY_DISTANCE = 4;
-var CLUSTER_STRENGTH = 0.8;
-var SYSTEM_COUNT = 250000;
+var CLUSTER_STRENGTH = 0.80;
+var SYSTEM_COUNT = 1000000;
 var BOUNDARY = 20000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
@@ -171,6 +171,36 @@ function Galaxy() {
     return true;
   }
 
+  function spiralGenerator(centerX, centerY, radius, coils, rotation) {
+    var thetaMax = coils * 2 * Math.PI;
+
+    var awayStep = radius / thetaMax;
+
+    var chord = 10;
+
+    for ( var theta = chord / awayStep; theta <= thetaMax; ) {
+      var away = awayStep * theta;
+      var around = theta + rotation;
+      var x = Math.round(centerX + Math.cos ( around ) * away);
+      var y = Math.round(centerY + Math.sin ( around ) * away);
+
+      var position = { x: x, y: y };
+
+      var newSystem = systemGenerator(position.x, position.y);
+      setPosition(position.x, position.y, newSystem);
+      self.systems.push(newSystem);
+
+      self.minX = Math.min(self.minX, position.x);
+      self.minY = Math.min(self.minY, position.y);
+      self.maxX = Math.max(self.maxX, position.x);
+      self.maxY = Math.max(self.maxY, position.y);
+
+      var delta = ( -2 * away + Math.sqrt ( 4 * away * away + 8 * awayStep * chord ) ) /
+          ( 2 * awayStep );
+      theta += delta;
+    }
+  }
+
   var initialX = INITIAL_POS;
   var initialY = INITIAL_POS;
   var initial = systemGenerator(initialX, initialY);
@@ -189,9 +219,13 @@ function Galaxy() {
 
   console.log('Generating galaxy:');
 
+  for (var i = 0; i < 12; i++) {
+    spiralGenerator(initialX, initialY, 1250, 1.5, 360 * i);
+  }
+
   var possibilities = self.systems.slice(0);
 
-  for (var i = 0; i < SYSTEM_COUNT; i++) {
+  for (var i = possibilities.length; i < SYSTEM_COUNT; i++) {
     var distace = _.random(1, PLANETARY_DISTANCE);
     var index = _.random(0, possibilities.length - 1);
     var neighbor = possibilities[index];

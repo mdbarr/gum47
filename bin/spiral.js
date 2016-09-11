@@ -76,6 +76,8 @@ function spiralGenerator(centerX, centerY, radius, coils, rotation) {
     var delta = ( -2 * away + Math.sqrt ( 4 * away * away + 8 * awayStep * chord ) ) / ( 2 * awayStep );
 
     theta += delta;
+
+    chord = _.random(6, 12);
   }
 }
 
@@ -83,8 +85,8 @@ function spiralGenerator(centerX, centerY, radius, coils, rotation) {
 
 plotPoint(0, 0);
 
-for (var i = 0; i < 5; i++) {
-  spiralGenerator(0, 0, 1500, 2, 360 * i);
+for (var i = 0; i < 12; i++) {
+  spiralGenerator(0, 0, 1250, 1.5, 360 * i);
 }
 
 ////////////////////////////////////////////////////////////
