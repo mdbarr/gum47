@@ -1,4 +1,4 @@
-#!/usr/bin/node --max-old-space-size=1500
+#!/usr/local/bin/node --max-old-space-size=16384
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -11,13 +11,13 @@ var PNG = require('pngjs').PNG;
 
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.80;
-var SYSTEM_COUNT = 3500000;
+var SYSTEM_COUNT = 1000000;
 var BOUNDARY = 20000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
 var SPIRAL = true;
 var SPIRAL_COUNT = 12;
-var SPIRAL_DISTANCE = 2200;
+var SPIRAL_DISTANCE = 1150;
 var SPIRAL_COILS = 1.5;
 
 var INITIAL_POS = 0;
@@ -53,9 +53,9 @@ function wordGenerator(length) {
 }
 
 function nameGenerator() {
+  return null;
   var clash = true;
   var name;
-
 
   while (clash)  {
 
@@ -204,9 +204,9 @@ function Galaxy() {
       var x = Math.round(centerX + Math.cos ( around ) * away);
       var y = Math.round(centerY + Math.sin ( around ) * away);
 
-      var position = { x: x, y: y };
-
-      createSystem(position);
+      if (safePosition(x,y) && !getPosition(x, y)) {
+        createSystem({ x: x, y: y });
+      }
 
       var delta = ( -2 * away + Math.sqrt ( 4 * away * away + 8 * awayStep * chord ) ) /
           ( 2 * awayStep );
@@ -293,6 +293,8 @@ function Galaxy() {
     }
   }
   process.stdout.write('\n');
+
+  self.minX -= 10; self.minY -= 10; self.maxX += 10; self.maxY += 10;
 }
 
 ////////////////////////////////////////////////////////////
@@ -301,6 +303,7 @@ var galaxy = new Galaxy();
 var width = Math.abs(galaxy.maxX - galaxy.minX);
 var height = Math.abs(galaxy.maxY - galaxy.minY);
 var data = new Buffer(width * height * 4);
+var drawCount = 0;
 
 console.log("%s, %s to %s, %s (%sx%s)", galaxy.minY, galaxy.minX, galaxy.maxX, galaxy.maxY, width, height);
 
@@ -314,6 +317,7 @@ for (var y = galaxy.minY; y < galaxy.maxY; y++) {
       data[offset+1] = system.sun.color[1];
       data[offset+2] = system.sun.color[2];
       data[offset+3] = 255;
+      drawCount++;
     } else {
       data[offset] = 5;
       data[offset+1] = 5;
@@ -331,4 +335,4 @@ png.data = data
 
 png.pack().pipe(fs.createWriteStream('galaxy.png'));
 
-console.log('%s systems generated.', galaxy.systems.length);
+console.log('%s systems generated.', drawCount);
