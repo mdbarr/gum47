@@ -1,4 +1,4 @@
-#!/usr/local/bin/node --max-old-space-size=8192
+#!/usr/local/bin/node --max-old-space-size=1024
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -392,7 +392,7 @@ console.log('%s systems generated.', drawCount);
 
 console.log('Populating database...');
 
-MongoClient.connect('mongodb://localhost:27017/gum47', function(err, db) {
+MongoClient.connect('mongodb://localhost:27017/gum47', { wtimeout: 60000 }, function(err, db) {
   assert.equal(null, err);
   var collection = db.collection('systems');
   collection.drop();
