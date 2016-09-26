@@ -1,4 +1,4 @@
-#!/usr/local/bin/node --max-old-space-size=16384
+#!/usr/bin/node --max-old-space-size=1024
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -10,17 +10,19 @@ var fs = require('fs');
 var PNG = require('pngjs').PNG;
 
 var PLANETARY_DISTANCE = 4;
-var CLUSTER_STRENGTH = 0.80;
-var SYSTEM_COUNT = 1000000;
+var CLUSTER_STRENGTH = 0.85;
+var SYSTEM_COUNT = 250000;
 var BOUNDARY = 20000;
 var BOUNDARY_ = -1 * BOUNDARY;
 
 var SPIRAL = true;
 var SPIRAL_COUNT = 12;
-var SPIRAL_DISTANCE = 1150;
+var SPIRAL_DISTANCE = 750;
 var SPIRAL_COILS = 1.5;
 
 var INITIAL_POS = 0;
+
+var PADDING = 10;
 
 function inCircle(center_x, center_y, radius, x, y) {
   var dist = Math.pow(center_x - x, 2) + Math.pow(center_y - y, 2);
@@ -32,7 +34,6 @@ function inCircle(center_x, center_y, radius, x, y) {
 
 var GLOBAL_ID_COUNT = 0;
 function idGenerator() {
-  return null;
   return ('00000000' + (GLOBAL_ID_COUNT++).toString(16)).slice(-8).replace(/(....)(....)/, '$1-$2');
 }
 
@@ -69,21 +70,71 @@ function nameGenerator() {
   return name;
 }
 
-var STELLAR_TYPES = [ { class: 'O', size: 'giant', occurrence: 0.0000003 },
-                      { class: 'B', size: 'giant', occurrence: 0.00125 },
-                      { class: 'A', size: 'normal', occurrence: 0.00625},
-                      { class: 'F', size: 'normal', occurrence: 0.0303 },
-                      { class: 'G', size: 'normal', occurrence: 0.075 },
-                      { class: 'K', size: 'normal', occurrence: 0.12, },
-                      { class: 'M', size: 'giant', occurrence: 0.76 } ];
+var STELLAR_TYPES = [
+  { class: 'B', size: 'super giant', occurrence: 0.00001 },
+  { class: 'A', size: 'super giant', occurrence: 0.00001 },
+  { class: 'F', size: 'super giant', occurrence: 0.00002 },
+  { class: 'G', size: 'super giant', occurrence: 0.00002 },
+  { class: 'K', size: 'super giant', occurrence: 0.00002 },
+  { class: 'M', size: 'super giant', occurrence: 0.00002 },
 
-var STELLAR_COLORS = { 'O': [ 50, 50, 255 ],
-                       'B': [ 100, 100, 255 ],
-                       'A': [ 100, 100, 255 ],
-                       'F': [ 255, 255, 255 ],
-                       'G': [ 255, 255, 200 ],
-                       'K': [ 255, 187, 153 ],
-                       'M': [ 200, 0, 0 ] };
+  { class: 'F', size: 'giant', occurrence: 0.0004 },
+  { class: 'G', size: 'giant', occurrence: 0.0005 },
+  { class: 'K', size: 'giant', occurrence: 0.0045 },
+  { class: 'M', size: 'giant', occurrence: 0.00045 },
+  { class: 'C', size: 'giant', occurrence: 0.001 },
+  { class: 'S', size: 'giant', occurrence: 0.01 },
+
+  { class: 'O', size: 'main sequence', occurrence: 0.0001 },
+  { class: 'B', size: 'main sequence', occurrence: 0.0099 },
+  { class: 'A', size: 'main sequence', occurrence: 0.02 },
+  { class: 'F', size: 'main sequence', occurrence: 0.04 },
+  { class: 'G', size: 'main sequence', occurrence: 0.08 },
+  { class: 'K', size: 'main sequence', occurrence: 0.15 },
+  { class: 'M', size: 'main sequence', occurrence: 0.60 },
+
+  { class: 'B', size: 'white dwarf', occurrence: 0.01 },
+  { class: 'A', size: 'white dwarf', occurrence: 0.02 },
+  { class: 'F', size: 'white dwarf', occurrence: 0.02 },
+  { class: 'G', size: 'white dwarf', occurrence: 0.01 },
+  { class: 'K', size: 'white dwarf', occurrence: 0.0095 },
+
+  { class: 'L', size: 'dwarf', occurrence: 0.001 },
+  { class: 'T', size: 'dwarf', occurrence: 0.001 },
+
+  { class: 'P', size: 'nebula', occurrence: 0.01 },
+
+  { class: 'NS', size: 'neutron star', occurrence: 0.00045 },
+  { class: 'BH', size: 'black hole', occurrence: 0.00005 }
+
+];
+
+/*
+var sum = 0;
+for (var i = 0; i < STELLAR_TYPES.length; i++) {
+  sum += STELLAR_TYPES[i].occurrence;
+}
+console.log('OCCURRENCE SUM', sum);
+*/
+
+var STELLAR_COLORS = {
+  'W': [ 170, 191, 255 ],
+  'O': [ 157, 180, 255 ],
+  'B': [ 170, 191, 255 ],
+  'A': [ 202, 216, 255 ],
+  'F': [ 251, 248, 255 ],
+  'G': [ 255, 244, 232 ],
+  'K': [ 255, 221, 190 ],
+  'M': [ 255, 187, 123 ],
+  'C': [ 255, 83, 0 ],
+  'S': [ 255, 147, 4 ],
+  'L': [ 141, 20,0 ],
+  'T': [ 81, 0, 26 ],
+  'D': [ 130, 139, 164 ],
+  'P': [ 0, 255, 236 ],
+  'NS': [ 255, 255, 255 ],
+  'BH': [ 0, 0, 0 ]
+};
 
 function stellarGenerator() {
   var accuracy = 10000000;
@@ -131,10 +182,10 @@ function systemGenerator(x, y) {
     }
   };
   /*
-  var planetCount = _.random(1, 10);
-  for (var i = 0; i < planetCount; i++) {
+    var planetCount = _.random(1, 10);
+    for (var i = 0; i < planetCount; i++) {
     system.planets.push(planetGenerator(system, i));
-  }
+    }
   */
   return system;
 }
@@ -165,15 +216,15 @@ function Galaxy() {
     }
 
     /*
-    if (Math.abs(x) < BLACKHOLE_RADIUS && Math.abs(y) < BLACKHOLE_RADIUS &&
-        inCircle(0, 0, BLACKHOLE_RADIUS, x, y)) {
+      if (Math.abs(x) < BLACKHOLE_RADIUS && Math.abs(y) < BLACKHOLE_RADIUS &&
+      inCircle(0, 0, BLACKHOLE_RADIUS, x, y)) {
       return false;
-    }
+      }
     */
     /*
-    if ((x > -50 && x < 50) && (y > -50 && y < 50)) {
+      if ((x > -50 && x < 50) && (y > -50 && y < 50)) {
       return false;
-    }
+      }
     */
     return true;
   }
@@ -281,7 +332,7 @@ function Galaxy() {
       possibilities.push(newSystem);
 
       if (i % 100 === 0) {
-        process.stdout.write('\u001b[36m.\u001b[0m');
+        process.stdout.write('\u001b[38;5;33m.\u001b[0m');
       }
 
       for (var p = 0; p < printPercentages.length; p++) {
@@ -294,7 +345,10 @@ function Galaxy() {
   }
   process.stdout.write('\n');
 
-  self.minX -= 10; self.minY -= 10; self.maxX += 10; self.maxY += 10;
+  self.minX -= PADDING;
+  self.maxX += PADDING;
+  self.minY -= PADDING;
+  self.maxY += PADDING;
 }
 
 ////////////////////////////////////////////////////////////
