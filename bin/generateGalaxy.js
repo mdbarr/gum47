@@ -1,4 +1,4 @@
-#!/usr/bin/node --max-old-space-size=1024
+#!/usr/local/bin/node --max-old-space-size=8192
 
 ////////////////////////////////////////////////////////////
 // Gum 47
@@ -7,7 +7,9 @@
 
 var _ = require('underscore');
 var fs = require('fs');
+var assert = require('assert');
 var PNG = require('pngjs').PNG;
+var MongoClient = require('mongodb').MongoClient;
 
 var PLANETARY_DISTANCE = 4;
 var CLUSTER_STRENGTH = 0.85;
@@ -54,7 +56,6 @@ function wordGenerator(length) {
 }
 
 function nameGenerator() {
-  return null;
   var clash = true;
   var name;
 
@@ -176,10 +177,8 @@ function systemGenerator(x, y) {
     name: nameGenerator(),
     sun: stellarGenerator(),
     planets: [],
-    position: {
-      x: x,
-      y: y
-    }
+    x: x,
+    y: y
   };
   /*
     var planetCount = _.random(1, 10);
@@ -308,14 +307,14 @@ function Galaxy() {
 
     var candidates = [];
 
-    var cornerX = neighbor.position.x - PLANETARY_DISTANCE;
-    var cornerY = neighbor.position.y - PLANETARY_DISTANCE;
+    var cornerX = neighbor.x - PLANETARY_DISTANCE;
+    var cornerY = neighbor.y - PLANETARY_DISTANCE;
     var dist = PLANETARY_DISTANCE * 2;
 
     for (var x = cornerX; x <= (cornerX + dist); x++) {
       for (var y = cornerY; y <= (cornerY + dist); y++) {
         if (safePosition(x,y) && !getPosition(x, y) &&
-            !inCircle(neighbor.position.x, neighbor.position.y, 1.2, x, y)) {
+            !inCircle(neighbor.x, neighbor.y, 1.2, x, y)) {
           candidates.push({ x: x, y: y });
         }
       }
@@ -390,3 +389,17 @@ png.data = data
 png.pack().pipe(fs.createWriteStream('galaxy.png'));
 
 console.log('%s systems generated.', drawCount);
+
+console.log('Populating database...');
+
+MongoClient.connect('mongodb://localhost:27017/gum47', function(err, db) {
+  assert.equal(null, err);
+  var collection = db.collection('systems');
+  collection.drop();
+
+  collection.insertMany(galaxy.systems, function(err, result) {
+    assert.equal(null, err);
+    console.log('Database updated.');
+    db.close();
+  });
+});
