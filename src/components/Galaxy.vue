@@ -52,6 +52,27 @@ const SPIRAL_COILS = 1.5;
 
 const INITIAL_POS = 0;
 
+const vertexShader = `
+attribute float alpha;
+varying float vAlpha;
+
+void main() {
+    vAlpha = alpha;
+    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+    gl_PointSize = 2.0;
+    gl_Position = projectionMatrix * mvPosition;
+}
+`;
+
+const fragmentShader = `
+uniform vec3 color;
+varying float vAlpha;
+
+void main() {
+    gl_FragColor = vec4( color, vAlpha );
+}
+`;
+
 function inCircle (centerX, centerY, radius, x, y) {
   const dist = Math.pow(centerX - x, 2) + Math.pow(centerY - y, 2);
   return dist <= Math.pow(radius, 2);
@@ -210,7 +231,23 @@ export default {
       this.geometry = new Three.BufferGeometry();
       this.geometry.setAttribute('position', new Three.Float32BufferAttribute(this.vertices, 3));
 
-      this.material = new Three.PointsMaterial({ color: 0xaaaaaa });
+      const numVertices = this.geometry.attributes.position.count;
+      const alphas = new Float32Array(Number(numVertices)); // 1 values per vertex
+
+      for (let i = 0; i < numVertices; i++) {
+        alphas[i] = Math.random();
+      }
+
+      this.geometry.setAttribute('alpha', new Three.BufferAttribute(alphas, 1));
+
+      const uniforms = { color: { value: new Three.Color(0xffffff) } };
+
+      this.material = new Three.ShaderMaterial({
+        uniforms,
+        vertexShader,
+        fragmentShader,
+        transparent: true,
+      });
 
       this.galaxy = new Three.Points(this.geometry, this.material);
 
