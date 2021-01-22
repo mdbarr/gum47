@@ -39,9 +39,9 @@
 import state from '@/state';
 import * as Three from '@/three';
 
-const PLANETARY_DISTANCE = 5;
-const CLUSTER_STRENGTH = 0.85;
-const SYSTEM_COUNT = 20000;
+const PLANETARY_DISTANCE = 7;
+const CLUSTER_STRENGTH = 0.90;
+const SYSTEM_COUNT = 25000;
 const BOUNDARY = 2000;
 const BOUNDARY_ = -1 * BOUNDARY;
 
@@ -83,6 +83,9 @@ export default {
       systems: [],
       positions: {},
       vertices: [],
+      geometry: null,
+      material: null,
+      galaxy: null,
     };
   },
   mounted () {
@@ -98,12 +101,12 @@ export default {
       antialias: true, canvas: this.$refs.canvas,
     });
     this.renderer.setSize(this.canvasWidth, this.canvasHeight);
-    this.renderer.setClearColor(0xffffff, 1);
+    this.renderer.setClearColor(0x031228, 1);
     this.renderer.clear(true, true, true);
 
     this.scene = new Three.Scene();
     // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
-    this.scene.add(new Three.AmbientLight(0xffffff));
+    // this.scene.add(new Three.AmbientLight(0xffffff));
 
     this.camera = new Three.PerspectiveCamera(60, this.canvasWidth / this.canvasHeight, 0.00001, 100000);
     this.camera.position.set(-500, -500, 500);
@@ -120,6 +123,18 @@ export default {
   },
   methods: {
     generate () {
+      if (this.galaxy) {
+        this.scene.remove(this.galaxy);
+      }
+
+      if (this.geometry) {
+        this.geometry.dispose();
+      }
+
+      if (this.material) {
+        this.material.dispose();
+      }
+
       this.systems = [];
       this.positions = {};
       this.vertices = [];
@@ -192,16 +207,16 @@ export default {
         }
       }
 
-      const geometry = new Three.BufferGeometry();
-      geometry.setAttribute('position', new Three.Float32BufferAttribute(this.vertices, 3));
+      this.geometry = new Three.BufferGeometry();
+      this.geometry.setAttribute('position', new Three.Float32BufferAttribute(this.vertices, 3));
 
-      const material = new Three.PointsMaterial({ color: 0x888888 });
+      this.material = new Three.PointsMaterial({ color: 0xaaaaaa });
 
-      const points = new Three.Points(geometry, material);
+      this.galaxy = new Three.Points(this.geometry, this.material);
 
       console.log('done.');
 
-      this.scene.add(points);
+      this.scene.add(this.galaxy);
       this.needsRender = true;
     },
     animate () {
@@ -254,15 +269,16 @@ export default {
 
       return newSystem;
     },
-    systemGenerator (x, y) {
+    systemGenerator (x, y, z = random(-2, 2)) {
       const system = {
         id: 0,
         planets: [],
         x,
         y,
+        z,
       };
 
-      this.vertices.push(x, y, 0);
+      this.vertices.push(x, y, z);
 
       return system;
     },
