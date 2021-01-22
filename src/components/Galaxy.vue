@@ -78,8 +78,8 @@ export default {
     // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
     this.scene.add(new Three.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.canvasWidth / this.canvasHeight, 0.001, 10000);
-    this.camera.position.set(0, 20, 100);
+    this.camera = new Three.PerspectiveCamera(60, this.canvasWidth / this.canvasHeight, 0.00001, 100000);
+    this.camera.position.set(-2000, -2000, 2000);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.addEventListener('change', () => {
@@ -94,6 +94,24 @@ export default {
   methods: {
     generate () {
       console.log('generating...');
+      const vertices = [];
+
+      for (let i = 0; i < 10000; i++) {
+        const x = Three.MathUtils.randFloatSpread(2000);
+        const y = Three.MathUtils.randFloatSpread(2000);
+        const z = Three.MathUtils.randFloatSpread(2000);
+
+        vertices.push(x, y, z);
+      }
+
+      const geometry = new Three.BufferGeometry();
+      geometry.setAttribute('position', new Three.Float32BufferAttribute(vertices, 3));
+
+      const material = new Three.PointsMaterial({ color: 0x888888 });
+
+      const points = new Three.Points(geometry, material);
+
+      this.scene.add(points);
     },
     animate () {
       this.controls.update();
