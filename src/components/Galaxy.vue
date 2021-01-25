@@ -131,7 +131,7 @@ varying float vAlpha;
 void main() {
     vAlpha = alpha;
     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-    gl_PointSize = 2.5;
+    gl_PointSize = 3.0;
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -198,8 +198,8 @@ export default {
       spiral: true,
       spiralCoils: 1.5,
       spiralCount: 4,
-      spiralDistance: 300,
-      systemCount: 25000,
+      spiralDistance: 400,
+      systemCount: 50000,
     };
   },
   mounted () {
@@ -223,7 +223,7 @@ export default {
     // this.scene.add(new Three.AmbientLight(0xffffff));
 
     this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.00001, 100000);
-    this.camera.position.set(-500, -500, 500);
+    this.camera.position.set(-550, -550, 550);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.addEventListener('change', () => {
@@ -253,6 +253,9 @@ export default {
       this.positions = {};
       this.vertices = [];
 
+      console.log('Generating galaxy...');
+      const start = Date.now();
+
       const initial = this.systemGenerator(this.initialX, this.initialY);
 
       this.systems.push(initial);
@@ -264,8 +267,6 @@ export default {
       this.maxY = 0;
 
       const clusterCount = Math.floor(Math.pow(this.planetaryDistance * 2 + 1, 2) * this.clusterStrength);
-
-      console.log('Generating galaxy...');
 
       if (this.spiral) {
         for (let i = 0; i < this.spiralCount; i++) {
@@ -340,7 +341,7 @@ export default {
 
       this.galaxy = new Three.Points(this.geometry, this.material);
 
-      console.log('done.');
+      console.log('done. %dms', Date.now() - start);
 
       this.scene.add(this.galaxy);
       this.needsRender = true;
@@ -396,8 +397,8 @@ export default {
       return newSystem;
     },
     systemGenerator (x, y) {
-      const dist = Math.sqrt(Math.pow(this.initialX - x, 2) + Math.pow(this.initialY - y, 2)) / 1.5;
-      let z = Math.min((1 / dist) * this.spiralDistance, 20) * 1.5;
+      const dist = Math.sqrt(Math.pow(this.initialX - x, 2) + Math.pow(this.initialY - y, 2)) / 2;
+      let z = Math.min((1 / dist) * this.spiralDistance, 25) * 2;
       z = randomFloat(-z, z) || 0;
 
       const system = {
@@ -443,6 +444,6 @@ export default {
 
 <style>
 .v-input--checkbox .v-label {
-  font-size: 12px !important;
+  font-size: 14px !important;
 }
 </style>
