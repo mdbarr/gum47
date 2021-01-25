@@ -156,6 +156,10 @@ function random (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
+function randomFloat (min, max) {
+  return Math.random() * (max - min) + min;
+}
+
 function vary (number, percent) {
   const difference = Math.floor(number * (percent / 100));
   const amount = random(-difference, difference);
@@ -391,7 +395,11 @@ export default {
 
       return newSystem;
     },
-    systemGenerator (x, y, z = random(-2, 2)) {
+    systemGenerator (x, y) {
+      const dist = Math.sqrt(Math.pow(this.initialX - x, 2) + Math.pow(this.initialY - y, 2)) / 1.5;
+      let z = Math.min((1 / dist) * this.spiralDistance, 20) * 1.5;
+      z = randomFloat(-z, z) || 0;
+
       const system = {
         id: 0,
         planets: [],
