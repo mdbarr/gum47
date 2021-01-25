@@ -39,19 +39,6 @@
 import state from '@/state';
 import * as Three from '@/three';
 
-const PLANETARY_DISTANCE = 7;
-const CLUSTER_STRENGTH = 0.90;
-const SYSTEM_COUNT = 25000;
-const BOUNDARY = 2000;
-const BOUNDARY_ = -1 * BOUNDARY;
-
-const SPIRAL = true;
-const SPIRAL_COUNT = 4;
-const SPIRAL_DISTANCE = 300;
-const SPIRAL_COILS = 1.5;
-
-const INITIAL_POS = 0;
-
 const vertexShader = `
 attribute float alpha;
 varying float vAlpha;
@@ -59,7 +46,7 @@ varying float vAlpha;
 void main() {
     vAlpha = alpha;
     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-    gl_PointSize = 2.0;
+    gl_PointSize = 2.5;
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -84,15 +71,20 @@ function random (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
+function vary (number, percent) {
+  const difference = Math.floor(number * (percent / 100));
+  const amount = random(-difference, difference);
+
+  return number + amount;
+}
+
 export default {
   name: 'Galaxy',
   data () {
     return {
       state,
-      canvasWidth: 750,
-      canvasHeight: 600,
-      width: 100,
-      height: 100,
+      width: 750,
+      height: 600,
       terrain: null,
       aspect: 0,
       renderer: null,
@@ -107,21 +99,36 @@ export default {
       geometry: null,
       material: null,
       galaxy: null,
+      minX: 0,
+      minY: 0,
+      maxX: 0,
+      maxY: 0,
+      planetaryDistance: 7,
+      clusterStrength: 0.90,
+      systemCount: 25000,
+      boundary: 2000,
+      bounary_: -2000,
+      spiral: true,
+      spiralCount: 4,
+      spiralDistance: 300,
+      spiralCoils: 1.5,
+      initialX: 0,
+      initialY: 0,
     };
   },
   mounted () {
     const canvas = this.$refs.canvas;
-    canvas.width = this.canvasWidth;
-    canvas.height = this.canvasHeight;
-    canvas.style.width = `${ this.canvasWidth }px`;
-    canvas.style.height = `${ this.canvasHeight }px`;
+    canvas.width = this.width;
+    canvas.height = this.height;
+    canvas.style.width = `${ this.width }px`;
+    canvas.style.height = `${ this.height }px`;
 
     Three.Object3D.DefaultUp = new Three.Vector3(0, 0, 1);
 
     this.renderer = new Three.WebGLRenderer({
       antialias: true, canvas: this.$refs.canvas,
     });
-    this.renderer.setSize(this.canvasWidth, this.canvasHeight);
+    this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(0x031228, 1);
     this.renderer.clear(true, true, true);
 
@@ -129,7 +136,7 @@ export default {
     // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
     // this.scene.add(new Three.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.canvasWidth / this.canvasHeight, 0.00001, 100000);
+    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.00001, 100000);
     this.camera.position.set(-500, -500, 500);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
@@ -160,34 +167,30 @@ export default {
       this.positions = {};
       this.vertices = [];
 
-      const initialX = INITIAL_POS;
-      const initialY = INITIAL_POS;
-      const initial = this.systemGenerator(initialX, initialY);
+      const initial = this.systemGenerator(this.initialX, this.initialY);
 
       this.systems.push(initial);
-      this.setPosition(initialX, initialY, initial);
+      this.setPosition(this.initialX, this.initialY, initial);
 
       this.minX = 0;
       this.minY = 0;
       this.maxX = 0;
       this.maxY = 0;
 
-      const clusterCount = Math.floor(Math.pow(PLANETARY_DISTANCE * 2 + 1, 2) * CLUSTER_STRENGTH);
+      const clusterCount = Math.floor(Math.pow(this.planetaryDistance * 2 + 1, 2) * this.clusterStrength);
 
       console.log('Generating galaxy...');
 
-      if (SPIRAL) {
-        for (let i = 0; i < SPIRAL_COUNT; i++) {
-          this.spiralGenerator(initialX, initialY,
-            SPIRAL_DISTANCE,
-            SPIRAL_COILS,
-            360 * i);
+      if (this.spiral) {
+        for (let i = 0; i < this.spiralCount; i++) {
+          this.spiralGenerator(this.initialX, this.initialY, vary(this.spiralDistance, 5),
+            this.spiralCoils, 360 * i);
         }
       }
 
       const possibilities = this.systems.slice(0);
 
-      for (let i = possibilities.length; i < SYSTEM_COUNT; i++) {
+      for (let i = possibilities.length; i < this.systemCount; i++) {
         const index = random(0, possibilities.length - 1);
         const neighbor = possibilities[index];
 
@@ -200,9 +203,9 @@ export default {
 
         const candidates = [];
 
-        const cornerX = neighbor.x - PLANETARY_DISTANCE;
-        const cornerY = neighbor.y - PLANETARY_DISTANCE;
-        const dist = PLANETARY_DISTANCE * 2;
+        const cornerX = neighbor.x - this.planetaryDistance;
+        const cornerY = neighbor.y - this.planetaryDistance;
+        const dist = this.planetaryDistance * 2;
 
         for (let x = cornerX; x <= cornerX + dist; x++) {
           for (let y = cornerY; y <= cornerY + dist; y++) {
@@ -273,11 +276,11 @@ export default {
       return this.positions[`${ x },${ y }`];
     },
     safePosition (x, y) {
-      if (x > BOUNDARY || x < BOUNDARY_) {
+      if (x > this.boundary || x < this.boundary_) {
         return false;
       }
 
-      if (y > BOUNDARY || y < BOUNDARY_) {
+      if (y > this.boundary || y < this.boundary_) {
         return false;
       }
 
