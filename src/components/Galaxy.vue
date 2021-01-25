@@ -12,28 +12,28 @@
         <v-row>
           <v-col cols="3">
             <v-text-field
-              v-model="width"
+              v-model.number="width"
               dense
               label="Width"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="height"
+              v-model.number="height"
               dense
               label="Height"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="initialX"
+              v-model.number="initialX"
               dense
               label="Initial X"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="initialY"
+              v-model.number="initialY"
               dense
               label="Initial Y"
             />
@@ -42,28 +42,28 @@
         <v-row>
           <v-col cols="3">
             <v-text-field
-              v-model="systemCount"
+              v-model.number="systemCount"
               dense
               label="System Count"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="clusterStrength"
+              v-model.number="clusterStrength"
               dense
               label="Cluster Strength"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="planetaryDistance"
+              v-model.number="planetaryDistance"
               dense
               label="Planetary Distance"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="boundary"
+              v-model.number="boundary"
               dense
               label="Boundary"
             />
@@ -75,28 +75,32 @@
               v-model="spiral"
               dense
               hide-details
-              label="Spirals"
+              label="Spiral Galaxy"
               class="pa-0 mt-0"
               color="#0073b1"
+              small
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="spiralCount"
+              v-model.number="spiralCount"
+              :disabled="!spiral"
               dense
               label="Spiral Count"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="spiralCoils"
+              v-model.number="spiralCoils"
+              :disabled="!spiral"
               dense
               label="Spiral Coils"
             />
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="spiralDistance"
+              v-model.number="spiralDistance"
+              :disabled="!spiral"
               dense
               label="Spiral Distance"
             />
@@ -428,3 +432,9 @@ export default {
   },
 };
 </script>
+
+<style>
+.v-input--checkbox .v-label {
+  font-size: 12px !important;
+}
+</style>
