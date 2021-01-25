@@ -5,32 +5,113 @@
       class="ma-3"
     />
     <v-card
-      width="400"
-      class="ma-3"
+      :width="width"
+      class="ma-3 pa-1"
     >
       <v-card-text>
         <v-row>
-          <v-col cols="6">
+          <v-col cols="3">
             <v-text-field
               v-model="width"
               dense
-              label="width"
+              label="Width"
             />
           </v-col>
-          <v-col cols="6">
+          <v-col cols="3">
             <v-text-field
               v-model="height"
               dense
-              label="height"
+              label="Height"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="initialX"
+              dense
+              label="Initial X"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="initialY"
+              dense
+              label="Initial Y"
             />
           </v-col>
         </v-row>
+        <v-row>
+          <v-col cols="3">
+            <v-text-field
+              v-model="systemCount"
+              dense
+              label="System Count"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="clusterStrength"
+              dense
+              label="Cluster Strength"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="planetaryDistance"
+              dense
+              label="Planetary Distance"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="boundary"
+              dense
+              label="Boundary"
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="3">
+            <v-checkbox
+              v-model="spiral"
+              dense
+              hide-details
+              label="Spirals"
+              class="pa-0 mt-0"
+              color="#0073b1"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="spiralCount"
+              dense
+              label="Spiral Count"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="spiralCoils"
+              dense
+              label="Spiral Coils"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="spiralDistance"
+              dense
+              label="Spiral Distance"
+            />
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-card-actions>
         <v-btn
+          block
+          color="#0073b1"
           @click="generate"
         >
           Generate
         </v-btn>
-      </v-card-text>
+      </v-card-actions>
     </v-card>
   </div>
 </template>
@@ -83,16 +164,14 @@ export default {
   data () {
     return {
       state,
-      width: 750,
+      width: 600,
       height: 600,
-      terrain: null,
       aspect: 0,
       renderer: null,
       scene: null,
       camera: null,
       controls: null,
       needsRender: true,
-      plane: null,
       systems: [],
       positions: {},
       vertices: [],
@@ -103,17 +182,16 @@ export default {
       minY: 0,
       maxX: 0,
       maxY: 0,
-      planetaryDistance: 7,
-      clusterStrength: 0.90,
-      systemCount: 25000,
       boundary: 2000,
-      bounary_: -2000,
-      spiral: true,
-      spiralCount: 4,
-      spiralDistance: 300,
-      spiralCoils: 1.5,
+      clusterStrength: 0.90,
       initialX: 0,
       initialY: 0,
+      planetaryDistance: 7,
+      spiral: true,
+      spiralCoils: 1.5,
+      spiralCount: 4,
+      spiralDistance: 300,
+      systemCount: 25000,
     };
   },
   mounted () {
@@ -276,11 +354,11 @@ export default {
       return this.positions[`${ x },${ y }`];
     },
     safePosition (x, y) {
-      if (x > this.boundary || x < this.boundary_) {
+      if (x > this.boundary || x < -this.boundary) {
         return false;
       }
 
-      if (y > this.boundary || y < this.boundary_) {
+      if (y > this.boundary || y < -this.boundary) {
         return false;
       }
 
