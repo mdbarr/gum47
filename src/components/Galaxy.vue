@@ -125,11 +125,11 @@ import state from '@/state';
 import * as Three from '@/three';
 
 const vertexShader = `
-attribute float alpha;
-varying float vAlpha;
+attribute vec4 color;
+varying vec4 vColor;
 
 void main() {
-    vAlpha = alpha;
+    vColor = color;
     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
     gl_PointSize = 3.0;
     gl_Position = projectionMatrix * mvPosition;
@@ -137,11 +137,10 @@ void main() {
 `;
 
 const fragmentShader = `
-uniform vec3 color;
-varying float vAlpha;
+varying vec4 vColor;
 
 void main() {
-    gl_FragColor = vec4( color, vAlpha );
+    gl_FragColor = vColor;
 }
 `;
 
@@ -172,7 +171,7 @@ export default {
   data () {
     return {
       state,
-      width: 600,
+      width: 800,
       height: 600,
       aspect: 0,
       renderer: null,
@@ -321,19 +320,19 @@ export default {
       this.geometry = new Three.BufferGeometry();
       this.geometry.setAttribute('position', new Three.Float32BufferAttribute(this.vertices, 3));
 
-      const numVertices = this.geometry.attributes.position.count;
-      const alphas = new Float32Array(Number(numVertices)); // 1 values per vertex
+      const numColors = this.geometry.attributes.position.count * 4;
+      const colors = new Float32Array(Number(numColors));
 
-      for (let i = 0; i < numVertices; i++) {
-        alphas[i] = Math.random();
+      for (let i = 0; i < numColors; i += 4) {
+        colors[i] = 1;
+        colors[i + 1] = 1;
+        colors[i + 2] = 1;
+        colors[i + 3] = Math.random();
       }
 
-      this.geometry.setAttribute('alpha', new Three.BufferAttribute(alphas, 1));
-
-      const uniforms = { color: { value: new Three.Color(0xffffff) } };
+      this.geometry.setAttribute('color', new Three.BufferAttribute(colors, 4));
 
       this.material = new Three.ShaderMaterial({
-        uniforms,
         vertexShader,
         fragmentShader,
         transparent: true,
