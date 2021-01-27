@@ -124,6 +124,8 @@
 import state from '@/state';
 import * as Three from '@/three';
 
+//////////
+
 const vertexShader = `
 attribute vec4 color;
 varying vec4 vColor;
@@ -143,6 +145,215 @@ void main() {
     gl_FragColor = vColor;
 }
 `;
+
+//////////
+
+const STELLAR_TYPES = [
+  {
+    type: 'B',
+    size: 'super giant',
+    occurrence: 0.00001,
+  },
+  {
+    type: 'A',
+    size: 'super giant',
+    occurrence: 0.00001,
+  },
+  {
+    type: 'F',
+    size: 'super giant',
+    occurrence: 0.00002,
+  },
+  {
+    type: 'G',
+    size: 'super giant',
+    occurrence: 0.00002,
+  },
+  {
+    type: 'K',
+    size: 'super giant',
+    occurrence: 0.00002,
+  },
+  {
+    type: 'M',
+    size: 'super giant',
+    occurrence: 0.00002,
+  },
+
+  {
+    type: 'F',
+    size: 'giant',
+    occurrence: 0.0004,
+  },
+  {
+    type: 'G',
+    size: 'giant',
+    occurrence: 0.0005,
+  },
+  {
+    type: 'K',
+    size: 'giant',
+    occurrence: 0.0045,
+  },
+  {
+    type: 'M',
+    size: 'giant',
+    occurrence: 0.00045,
+  },
+  {
+    type: 'C',
+    size: 'giant',
+    occurrence: 0.001,
+  },
+  {
+    type: 'S',
+    size: 'giant',
+    occurrence: 0.01,
+  },
+
+  {
+    type: 'O',
+    size: 'main sequence',
+    occurrence: 0.0001,
+  },
+  {
+    type: 'B',
+    size: 'main sequence',
+    occurrence: 0.0099,
+  },
+  {
+    type: 'A',
+    size: 'main sequence',
+    occurrence: 0.02,
+  },
+  {
+    type: 'F',
+    size: 'main sequence',
+    occurrence: 0.04,
+  },
+  {
+    type: 'G',
+    size: 'main sequence',
+    occurrence: 0.08,
+  },
+  {
+    type: 'K',
+    size: 'main sequence',
+    occurrence: 0.15,
+  },
+  {
+    type: 'M',
+    size: 'main sequence',
+    occurrence: 0.60,
+  },
+
+  {
+    type: 'B',
+    size: 'white dwarf',
+    occurrence: 0.01,
+  },
+  {
+    type: 'A',
+    size: 'white dwarf',
+    occurrence: 0.02,
+  },
+  {
+    type: 'F',
+    size: 'white dwarf',
+    occurrence: 0.02,
+  },
+  {
+    type: 'G',
+    size: 'white dwarf',
+    occurrence: 0.01,
+  },
+  {
+    type: 'K',
+    size: 'white dwarf',
+    occurrence: 0.0095,
+  },
+
+  {
+    type: 'L',
+    size: 'dwarf',
+    occurrence: 0.001,
+  },
+  {
+    type: 'T',
+    size: 'dwarf',
+    occurrence: 0.001,
+  },
+
+  {
+    type: 'P',
+    size: 'nebula',
+    occurrence: 0.01,
+  },
+
+  {
+    type: 'NS',
+    size: 'neutron star',
+    occurrence: 0.00045,
+  },
+  {
+    type: 'BH',
+    size: 'black hole',
+    occurrence: 0.00005,
+  },
+
+];
+
+/*
+var sum = 0;
+for (var i = 0; i < STELLAR_TYPES.length; i++) {
+  sum += STELLAR_TYPES[i].occurrence;
+}
+console.log('OCCURRENCE SUM', sum);
+*/
+
+const STELLAR_COLORS = {
+  W: new Three.Color(0xaabfff),
+  O: new Three.Color(0x0071c1),
+  B: new Three.Color(0x99cdff),
+  A: new Three.Color(0xffffff),
+  F: new Three.Color(0xfeff99),
+  G: new Three.Color(0xffff00),
+  K: new Three.Color(0xff6601),
+  M: new Three.Color(0xfe0000),
+  C: new Three.Color(0xff5300),
+  S: new Three.Color(0xff9303),
+  L: new Three.Color(0xe817b9),
+  T: new Three.Color(0x3e0303),
+  D: new Three.Color(0x828ba4),
+  P: new Three.Color(0x00ffec),
+  NS: new Three.Color(0xffffff),
+  BH: new Three.Color(0x000000),
+};
+
+function stellarGenerator () {
+  const accuracy = 10000000;
+  const type = random(0, accuracy);
+  let index = STELLAR_TYPES.length - 1;
+
+  for (let i = 0, perc = 0; i < STELLAR_TYPES.length; i++) {
+    perc += Math.ceil(accuracy * STELLAR_TYPES[i].occurrence);
+    if (type < perc) {
+      index = i;
+      break;
+    }
+  }
+
+  const stellarType = STELLAR_TYPES[index].type;
+
+  const sun = {
+    type: stellarType,
+    size: STELLAR_TYPES[index].size,
+    color: STELLAR_COLORS[stellarType],
+  };
+  return sun;
+}
+
+//////////
 
 function inCircle (centerX, centerY, radius, x, y) {
   const dist = Math.pow(centerX - x, 2) + Math.pow(centerY - y, 2);
@@ -323,10 +534,11 @@ export default {
       const numColors = this.geometry.attributes.position.count * 4;
       const colors = new Float32Array(Number(numColors));
 
-      for (let i = 0; i < numColors; i += 4) {
-        colors[i] = 1;
-        colors[i + 1] = 1;
-        colors[i + 2] = 1;
+      for (let i = 0, n = 0; i < numColors; i += 4, n++) {
+        const color = this.systems[n].sun.color;
+        colors[i] = color.r;
+        colors[i + 1] = color.g;
+        colors[i + 2] = color.b;
         colors[i + 3] = Math.random();
       }
 
@@ -401,7 +613,8 @@ export default {
       z = randomFloat(-z, z) || 0;
 
       const system = {
-        id: 0,
+        id: this.vertices.length / 3,
+        sun: stellarGenerator(),
         planets: [],
         x,
         y,
