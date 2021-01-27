@@ -313,13 +313,13 @@ console.log('OCCURRENCE SUM', sum);
 
 const STELLAR_COLORS = {
   W: new Three.Color(0xaabfff),
-  O: new Three.Color(0x0071c1),
-  B: new Three.Color(0x99cdff),
-  A: new Three.Color(0xffffff),
-  F: new Three.Color(0xfeff99),
-  G: new Three.Color(0xffff00),
-  K: new Three.Color(0xff6601),
-  M: new Three.Color(0xfe0000),
+  O: new Three.Color(0x9bb0ff),
+  B: new Three.Color(0xaabfff),
+  A: new Three.Color(0xcad7ff),
+  F: new Three.Color(0xf8f7ff),
+  G: new Three.Color(0xfff4ea),
+  K: new Three.Color(0xffd2a1),
+  M: new Three.Color(0xffcc6f),
   C: new Three.Color(0xff5300),
   S: new Three.Color(0xff9303),
   L: new Three.Color(0xe817b9),
@@ -331,7 +331,7 @@ const STELLAR_COLORS = {
 };
 
 function stellarGenerator () {
-  const accuracy = 10000000;
+  const accuracy = 100000000;
   const type = random(0, accuracy);
   let index = STELLAR_TYPES.length - 1;
 
@@ -432,7 +432,7 @@ export default {
     // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
     // this.scene.add(new Three.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.00001, 100000);
+    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.000001, 100000);
     this.camera.position.set(-550, -550, 550);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
