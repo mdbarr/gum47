@@ -124,30 +124,6 @@
 import state from '@/state';
 import * as Three from '@/three';
 
-//////////
-
-const vertexShader = `
-attribute vec4 color;
-varying vec4 vColor;
-
-void main() {
-    vColor = color;
-    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-    gl_PointSize = 3.0;
-    gl_Position = projectionMatrix * mvPosition;
-}
-`;
-
-const fragmentShader = `
-varying vec4 vColor;
-
-void main() {
-    gl_FragColor = vColor;
-}
-`;
-
-//////////
-
 const STELLAR_TYPES = [
   {
     type: 'B',
@@ -304,11 +280,11 @@ const STELLAR_TYPES = [
 ];
 
 /*
-var sum = 0;
-for (var i = 0; i < STELLAR_TYPES.length; i++) {
+  var sum = 0;
+  for (var i = 0; i < STELLAR_TYPES.length; i++) {
   sum += STELLAR_TYPES[i].occurrence;
-}
-console.log('OCCURRENCE SUM', sum);
+  }
+  console.log('OCCURRENCE SUM', sum);
 */
 
 const STELLAR_COLORS = {
@@ -330,6 +306,17 @@ const STELLAR_COLORS = {
   BH: new Three.Color(0x000000),
 };
 
+const STELLAR_SIZES = {
+  'super giant': [ 3, 3, 3 ],
+  giant: [ 2, 2, 2 ],
+  'main sequence': [ 1, 1, 1 ],
+  'white dwarf': [ 0.75, 0.75, 0.75 ],
+  dwarf: [ 0.5, 0.5, 0.5 ],
+  nebula: [ 1, 1, 1 ],
+  'neutron star': [ 0.25, 0.25, 0.25 ],
+  'black hole': [ 0.1, 0.1, 0.1 ],
+};
+
 function stellarGenerator () {
   const accuracy = 100000000;
   const type = random(0, accuracy);
@@ -347,7 +334,7 @@ function stellarGenerator () {
 
   const sun = {
     type: stellarType,
-    size: STELLAR_TYPES[index].size,
+    size: STELLAR_SIZES[STELLAR_TYPES[index].size],
     color: STELLAR_COLORS[stellarType],
   };
   return sun;
@@ -410,6 +397,7 @@ export default {
       spiralCount: 4,
       spiralDistance: 400,
       systemCount: 50000,
+      spacer: 10,
     };
   },
   mounted () {
@@ -430,10 +418,10 @@ export default {
 
     this.scene = new Three.Scene();
     // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
-    // this.scene.add(new Three.AmbientLight(0xffffff));
+    this.scene.add(new Three.AmbientLight(0xffffff));
 
     this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.000001, 100000);
-    this.camera.position.set(-550, -550, 550);
+    this.camera.position.set(0, -7000, 0);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.addEventListener('change', () => {
@@ -528,29 +516,17 @@ export default {
         }
       }
 
-      this.geometry = new Three.BufferGeometry();
-      this.geometry.setAttribute('position', new Three.Float32BufferAttribute(this.vertices, 3));
+      this.geometry = new Three.IcosahedronGeometry(5, 3);
+      this.material = new Three.MeshPhongMaterial();
+      this.galaxy = new Three.InstancedMesh(this.geometry, this.material, this.systems.length);
 
-      const numColors = this.geometry.attributes.position.count * 4;
-      const colors = new Float32Array(Number(numColors));
-
-      for (let i = 0, n = 0; i < numColors; i += 4, n++) {
-        const color = this.systems[n].sun.color;
-        colors[i] = color.r;
-        colors[i + 1] = color.g;
-        colors[i + 2] = color.b;
-        colors[i + 3] = Math.random();
+      const matrix = new Three.Matrix4();
+      for (let i = 0; i < this.systems.length; i++) {
+        matrix.makeScale(...this.systems[i].sun.size);
+        matrix.setPosition(...this.vertices[i]);
+        this.galaxy.setMatrixAt(i, matrix);
+        this.galaxy.setColorAt(i, this.systems[i].sun.color);
       }
-
-      this.geometry.setAttribute('color', new Three.BufferAttribute(colors, 4));
-
-      this.material = new Three.ShaderMaterial({
-        vertexShader,
-        fragmentShader,
-        transparent: true,
-      });
-
-      this.galaxy = new Three.Points(this.geometry, this.material);
 
       console.log('done. %dms', Date.now() - start);
 
@@ -621,7 +597,7 @@ export default {
         z,
       };
 
-      this.vertices.push(x, y, z);
+      this.vertices.push([ x, y, z ].map(i => i * this.spacer));
 
       return system;
     },
