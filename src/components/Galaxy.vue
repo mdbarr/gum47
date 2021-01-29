@@ -303,7 +303,7 @@ const STELLAR_COLORS = {
   D: new Three.Color(0x828ba4),
   P: new Three.Color(0x00ffec),
   NS: new Three.Color(0xffffff),
-  BH: new Three.Color(0x000000),
+  BH: new Three.Color(0x111111),
 };
 
 const STELLAR_SIZES = {
@@ -398,8 +398,8 @@ export default {
       spiral: true,
       spiralCoils: 1.5,
       spiralCount: 4,
-      spiralDistance: 400,
-      systemCount: 5000,
+      spiralDistance: 350,
+      systemCount: 20000,
       spacer: 10,
       bloom: {
         exposure: 1,
@@ -452,7 +452,7 @@ export default {
     this.loader = new Three.TextureLoader();
 
     this.loader.load('smoke-v2.png', (texture) => {
-      const geometry = new Three.CircleBufferGeometry(16000);
+      const geometry = new Three.CircleBufferGeometry(this.spiralDistance * 40);
 
       this.cloudParticles = [];
 
