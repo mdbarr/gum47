@@ -376,6 +376,9 @@ export default {
       scene: null,
       camera: null,
       controls: null,
+      renderScene: null,
+      bloomPass: null,
+      composer: null,
       needsRender: true,
       systems: [],
       positions: {},
@@ -398,6 +401,12 @@ export default {
       spiralDistance: 400,
       systemCount: 50000,
       spacer: 10,
+      bloom: {
+        exposure: 1,
+        radius: 0,
+        strength: 1.5,
+        threshold: 0,
+      },
     };
   },
   mounted () {
@@ -413,7 +422,7 @@ export default {
       antialias: true, canvas: this.$refs.canvas,
     });
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0x031228, 1);
+    this.renderer.setClearColor(0, 1);
     this.renderer.clear(true, true, true);
 
     this.scene = new Three.Scene();
@@ -428,6 +437,16 @@ export default {
       this.needsRender = true;
     });
     this.controls.update();
+
+    this.renderScene = new Three.RenderPass(this.scene, this.camera);
+    this.bloomPass = new Three.UnrealBloomPass(new Three.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    this.bloomPass.threshold = this.bloom.threshold;
+    this.bloomPass.strength = this.bloom.strength;
+    this.bloomPass.radius = this.bloom.radius;
+
+    this.composer = new Three.EffectComposer(this.renderer);
+    this.composer.addPass(this.renderScene);
+    this.composer.addPass(this.bloomPass);
 
     this.generate();
 
@@ -537,7 +556,8 @@ export default {
       this.controls.update();
 
       if (this.needsRender) {
-        this.renderer.render(this.scene, this.camera);
+        // this.renderer.render(this.scene, this.camera);
+        this.composer.render();
         this.needsRender = false;
       }
 

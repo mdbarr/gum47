@@ -4,7 +4,11 @@ Three.Line2 = require('three/examples/jsm/lines/Line2').Line2;
 Three.LineGeometry = require('three/examples/jsm/lines/LineGeometry').LineGeometry;
 Three.LineMaterial = require('three/examples/jsm/lines/LineMaterial').LineMaterial;
 Three.OrbitControls = require('three/examples/jsm/controls/OrbitControls').OrbitControls;
-Three.STLLoader = require('three/examples/jsm/loaders/STLLoader.js').STLLoader;
+Three.STLLoader = require('three/examples/jsm/loaders/STLLoader').STLLoader;
+
+Three.EffectComposer = require('three/examples/jsm/postprocessing/EffectComposer').EffectComposer;
+Three.RenderPass = require('three/examples/jsm/postprocessing/RenderPass').RenderPass;
+Three.UnrealBloomPass = require('three/examples/jsm/postprocessing/UnrealBloomPass').UnrealBloomPass;
 
 // TextGeometry
 function TextShapeGeometry (text, parameters) {
