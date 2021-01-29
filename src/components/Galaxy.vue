@@ -289,7 +289,7 @@ const STELLAR_TYPES = [
 
 const STELLAR_COLORS = {
   W: new Three.Color(0xaabfff),
-  O: new Three.Color(0x9bb0ff),
+  O: new Three.Color(0x0071c1),
   B: new Three.Color(0xaabfff),
   A: new Three.Color(0xcad7ff),
   F: new Three.Color(0xf8f7ff),
@@ -369,7 +369,7 @@ export default {
   data () {
     return {
       state,
-      width: 800,
+      width: 1000,
       height: 600,
       aspect: 0,
       renderer: null,
@@ -407,6 +407,7 @@ export default {
         strength: 1.5,
         threshold: 0,
       },
+      loader: null,
     };
   },
   mounted () {
@@ -426,10 +427,10 @@ export default {
     this.renderer.clear(true, true, true);
 
     this.scene = new Three.Scene();
-    // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
-    this.scene.add(new Three.AmbientLight(0xffffff));
+    this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
+    // this.scene.add(new Three.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.0000001, 10000000);
+    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.00000001, 10000000);
     this.camera.position.set(0, -15000, 0);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
@@ -447,6 +448,38 @@ export default {
     this.composer = new Three.EffectComposer(this.renderer);
     this.composer.addPass(this.renderScene);
     this.composer.addPass(this.bloomPass);
+
+    this.loader = new Three.TextureLoader();
+
+    this.loader.load('smoke-v2.png', (texture) => {
+      const geometry = new Three.CircleBufferGeometry(16000);
+
+      this.cloudParticles = [];
+
+      for (let p = 0; p < 4; p++) {
+        const material = new Three.MeshStandardMaterial({
+          map: texture,
+          transparent: true,
+          side: Three.DoubleSide,
+          depthTest: false,
+          color: new Three.Color(Math.random(), Math.random(), Math.random()),
+        });
+
+        const cloud = new Three.Mesh(geometry, material);
+        cloud.position.set(0, 0, p);
+
+        cloud.rotation.x = p / 360;
+        cloud.rotation.y = p / 360;
+        cloud.rotation.z = Math.random() * 360;
+
+        cloud.material.opacity = random(15, 35) / 100;
+
+        this.cloudParticles.push(cloud);
+        this.scene.add(cloud);
+
+        this.needsRender = true;
+      }
+    });
 
     this.generate();
 
@@ -617,7 +650,7 @@ export default {
         z,
       };
 
-      const spacer = Math.max(((dist * 4) / this.spiralDistance) * 5, 1) + 10;
+      const spacer = Math.max(((dist * 8) / this.spiralDistance) * 5, 1) + 5;
 
       this.vertices.push([ x, y, z ].map(i => i * spacer));
 
