@@ -399,7 +399,7 @@ export default {
       spiralCoils: 1.5,
       spiralCount: 4,
       spiralDistance: 400,
-      systemCount: 50000,
+      systemCount: 5000,
       spacer: 10,
       bloom: {
         exposure: 1,
@@ -429,8 +429,8 @@ export default {
     // this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
     this.scene.add(new Three.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.000001, 100000);
-    this.camera.position.set(0, -7000, 0);
+    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.0000001, 10000000);
+    this.camera.position.set(0, -15000, 0);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.addEventListener('change', () => {
@@ -535,7 +535,7 @@ export default {
         }
       }
 
-      this.geometry = new Three.IcosahedronGeometry(5, 3);
+      this.geometry = new Three.IcosahedronGeometry(6, 3);
       this.material = new Three.MeshPhongMaterial();
       this.galaxy = new Three.InstancedMesh(this.geometry, this.material, this.systems.length);
 
@@ -617,7 +617,9 @@ export default {
         z,
       };
 
-      this.vertices.push([ x, y, z ].map(i => i * this.spacer));
+      const spacer = Math.max(((dist * 4) / this.spiralDistance) * 5, 1) + 10;
+
+      this.vertices.push([ x, y, z ].map(i => i * spacer));
 
       return system;
     },
