@@ -1,5 +1,26 @@
 <template>
   <div>
+    <v-snackbar
+      v-model="snackbar"
+      :timeout="5000"
+      color="red darken-3"
+      top
+    >
+      Failed to generate galaxy with given parameters
+      <template #action="{ attrs }">
+        <v-btn
+          icon
+          small
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon small>
+            mdi-close
+          </v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+
     <canvas
       ref="canvas"
       class="ma-3"
@@ -412,6 +433,7 @@ export default {
       loader: null,
       texture: null,
       clouds: [],
+      snackbar: false,
     };
   },
   async mounted () {
@@ -520,10 +542,8 @@ export default {
         const neighbor = possibilities[index];
 
         if (!neighbor) {
-          console.log('FAULT', index, possibilities.length);
-          i--;
-          possibilities.splice(index, 1);
-          continue;
+          this.snackbar = true;
+          return;
         }
 
         const candidates = [];
