@@ -111,7 +111,8 @@
         <v-btn
           block
           color="#0073b1"
-          @click="generate"
+          :loading="loading"
+          @click="regenerate"
         >
           Generate
         </v-btn>
@@ -369,6 +370,7 @@ export default {
   data () {
     return {
       state,
+      loading: false,
       width: 1000,
       height: 600,
       aspect: 0,
@@ -408,9 +410,13 @@ export default {
         threshold: 0,
       },
       loader: null,
+      texture: null,
+      clouds: [],
     };
   },
-  mounted () {
+  async mounted () {
+    this.loading = true;
+
     const canvas = this.$refs.canvas;
     canvas.width = this.width;
     canvas.height = this.height;
@@ -451,39 +457,13 @@ export default {
 
     this.loader = new Three.TextureLoader();
 
-    this.loader.load('smoke-v2.png', (texture) => {
-      const geometry = new Three.CircleBufferGeometry(this.spiralDistance * 40);
-
-      this.cloudParticles = [];
-
-      for (let p = 0; p < 4; p++) {
-        const material = new Three.MeshStandardMaterial({
-          map: texture,
-          transparent: true,
-          side: Three.DoubleSide,
-          depthTest: false,
-          color: new Three.Color(Math.random(), Math.random(), Math.random()),
-        });
-
-        const cloud = new Three.Mesh(geometry, material);
-        cloud.position.set(0, 0, p);
-
-        cloud.rotation.x = p / 360;
-        cloud.rotation.y = p / 360;
-        cloud.rotation.z = Math.random() * 360;
-
-        cloud.material.opacity = random(15, 35) / 100;
-
-        this.cloudParticles.push(cloud);
-        this.scene.add(cloud);
-
-        this.needsRender = true;
-      }
-    });
+    this.texture = await this.asyncLoad(this.loader, 'smoke-v2.png');
 
     this.generate();
 
     this.animate();
+
+    this.loading = false;
   },
   methods: {
     generate () {
@@ -497,6 +477,14 @@ export default {
 
       if (this.material) {
         this.material.dispose();
+      }
+
+      if (this.clouds.length) {
+        for (const cloud of this.clouds) {
+          this.scene.remove(cloud);
+          cloud.geometry.dispose();
+          cloud.material.dispose();
+        }
       }
 
       this.systems = [];
@@ -583,6 +571,32 @@ export default {
       console.log('done. %dms', Date.now() - start);
 
       this.scene.add(this.galaxy);
+
+      this.clouds = [];
+
+      const geometry = new Three.CircleBufferGeometry(this.spiralDistance * 40);
+      for (let p = 0; p < 4; p++) {
+        const material = new Three.MeshStandardMaterial({
+          map: this.texture,
+          transparent: true,
+          side: Three.DoubleSide,
+          depthTest: false,
+          color: new Three.Color(Math.random(), Math.random(), Math.random()),
+        });
+
+        const cloud = new Three.Mesh(geometry, material);
+        cloud.position.set(0, 0, p);
+
+        cloud.rotation.x = p / 360;
+        cloud.rotation.y = p / 360;
+        cloud.rotation.z = Math.random() * 360;
+
+        cloud.material.opacity = random(15, 35) / 100;
+
+        this.clouds.push(cloud);
+        this.scene.add(cloud);
+      }
+
       this.needsRender = true;
     },
     animate () {
@@ -595,6 +609,11 @@ export default {
       }
 
       requestAnimationFrame(this.animate);
+    },
+    asyncLoad (loader, resource) {
+      return new Promise((resolve) => loader.load(resource, (asset) => {
+        resolve(asset);
+      }));
     },
     setPosition (x, y, system) {
       this.positions[`${ x },${ y }`] = system;
@@ -635,6 +654,13 @@ export default {
       this.maxY = Math.max(this.maxY, position.y);
 
       return newSystem;
+    },
+    regenerate () {
+      this.loading = true;
+      setTimeout(() => {
+        this.generate();
+        this.loading = false;
+      }, 100);
     },
     systemGenerator (x, y) {
       const dist = Math.sqrt(Math.pow(this.initialX - x, 2) + Math.pow(this.initialY - y, 2)) / 2;
