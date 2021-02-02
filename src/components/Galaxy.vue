@@ -24,6 +24,7 @@
     <canvas
       ref="canvas"
       class="ma-3"
+      @click="clicked"
     />
     <v-card
       :width="width"
@@ -399,6 +400,7 @@ export default {
       scene: null,
       camera: null,
       controls: null,
+      raycaster: null,
       renderScene: null,
       bloomPass: null,
       composer: null,
@@ -467,6 +469,8 @@ export default {
     });
     this.controls.update();
 
+    this.raycaster = new Three.Raycaster();
+
     this.renderScene = new Three.RenderPass(this.scene, this.camera);
     this.bloomPass = new Three.UnrealBloomPass(new Three.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
     this.bloomPass.threshold = this.bloom.threshold;
@@ -488,6 +492,29 @@ export default {
     this.loading = false;
   },
   methods: {
+    clicked (event) {
+      const position = {
+        x: (event.offsetX / this.width) * 2 - 1,
+        y: -(event.offsetY / this.height) * 2 + 1,
+      };
+
+      console.log('event', event);
+      console.log('position', position, event.x, event.y);
+
+      this.raycaster.setFromCamera(position, this.camera);
+      const intersects = this.raycaster.intersectObjects([ this.galaxy ]);
+
+      console.log('intersections ', intersects.length);
+
+      for (let i = 0; i < intersects.length; i++) {
+        console.log('is galaxy', intersects[i].object === this.galaxy);
+        if (intersects[i].instanceId) {
+          this.galaxy.setColorAt(intersects[i].instanceId, new Three.Color(0xff0000));
+          this.galaxy.instanceColor.needsUpdate = true;
+          this.needsRender = true;
+        }
+      }
+    },
     generate () {
       if (this.galaxy) {
         this.scene.remove(this.galaxy);
