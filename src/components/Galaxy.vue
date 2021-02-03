@@ -146,6 +146,7 @@
 <script>
 import state from '@/state';
 import * as Three from '@/three';
+import TWEEN from '@tweenjs/tween.js';
 
 const STELLAR_TYPES = [
   {
@@ -436,6 +437,7 @@ export default {
       texture: null,
       clouds: [],
       snackbar: false,
+      tween: null,
     };
   },
   async mounted () {
@@ -509,9 +511,34 @@ export default {
       for (let i = 0; i < intersects.length; i++) {
         console.log('is galaxy', intersects[i].object === this.galaxy);
         if (intersects[i].instanceId) {
-          this.galaxy.setColorAt(intersects[i].instanceId, new Three.Color(0xff0000));
-          this.galaxy.instanceColor.needsUpdate = true;
-          this.needsRender = true;
+          // this.galaxy.setColorAt(intersects[i].instanceId, new Three.Color(0xff0000));
+          // this.galaxy.instanceColor.needsUpdate = true;
+          console.log('current', this.controls.target);
+          const from = {
+            x: this.controls.target.x,
+            y: this.controls.target.y,
+            z: this.controls.target.z,
+          };
+
+          const to = {
+            x: this.vertices[intersects[i].instanceId][0],
+            y: this.vertices[intersects[i].instanceId][1],
+            z: this.vertices[intersects[i].instanceId][2],
+          };
+
+          if (this.tween) {
+            this.tween.stop();
+          }
+
+          this.tween = new TWEEN.Tween(from).
+            to(to, 1000).
+            easing(TWEEN.Easing.Quadratic.InOut).
+            onUpdate(() => {
+              this.controls.target.set(from.x, from.y, from.z);
+              this.controls.update();
+              this.needsRender = true;
+            }).
+            start();
         }
       }
     },
@@ -646,7 +673,8 @@ export default {
 
       this.needsRender = true;
     },
-    animate () {
+    animate (time) {
+      TWEEN.update(time);
       this.controls.update();
 
       if (this.needsRender) {
