@@ -426,7 +426,6 @@ export default {
       spiralCount: 4,
       spiralDistance: 350,
       systemCount: 20000,
-      spacer: 10,
       bloom: {
         exposure: 1,
         radius: 0,
@@ -469,6 +468,7 @@ export default {
     this.controls.addEventListener('change', () => {
       this.needsRender = true;
     });
+    // this.controls.autoRotate = true;
     this.controls.update();
 
     this.raycaster = new Three.Raycaster();
@@ -514,16 +514,21 @@ export default {
           // this.galaxy.setColorAt(intersects[i].instanceId, new Three.Color(0xff0000));
           // this.galaxy.instanceColor.needsUpdate = true;
           console.log('current', this.controls.target);
+          const distance = this.camera.position.distanceTo(this.controls.target);
+          console.log('distance', distance);
+
           const from = {
             x: this.controls.target.x,
             y: this.controls.target.y,
             z: this.controls.target.z,
+            d: distance,
           };
 
           const to = {
             x: this.vertices[intersects[i].instanceId][0],
             y: this.vertices[intersects[i].instanceId][1],
             z: this.vertices[intersects[i].instanceId][2],
+            d: 100,
           };
 
           if (this.tween) {
@@ -535,8 +540,15 @@ export default {
             easing(TWEEN.Easing.Quadratic.InOut).
             onUpdate(() => {
               this.controls.target.set(from.x, from.y, from.z);
+              this.controls.minDistance = from.d;
+              this.controls.maxDistance = from.d;
               this.controls.update();
               this.needsRender = true;
+            }).
+            onComplete(() => {
+              this.controls.minDistance = 0;
+              this.controls.maxDistance = Infinity;
+              this.controls.update();
             }).
             start();
         }
