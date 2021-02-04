@@ -427,9 +427,8 @@ export default {
       spiralDistance: 350,
       systemCount: 20000,
       bloom: {
-        exposure: 1,
         radius: 0,
-        strength: 1.5,
+        strength: 1,
         threshold: 0,
       },
       loader: null,
@@ -461,7 +460,7 @@ export default {
     this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
     // this.scene.add(new Three.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.00000001, 10000000);
+    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.000000001, 100000000);
     this.camera.position.set(0, -15000, 0);
 
     this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
@@ -474,10 +473,10 @@ export default {
     this.raycaster = new Three.Raycaster();
 
     this.renderScene = new Three.RenderPass(this.scene, this.camera);
-    this.bloomPass = new Three.UnrealBloomPass(new Three.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    this.bloomPass.threshold = this.bloom.threshold;
-    this.bloomPass.strength = this.bloom.strength;
-    this.bloomPass.radius = this.bloom.radius;
+    this.bloomPass = new Three.UnrealBloomPass(new Three.Vector2(window.innerWidth, window.innerHeight),
+      this.bloom.strength,
+      this.bloom.radius,
+      this.bloom.threshold);
 
     this.composer = new Three.EffectComposer(this.renderer);
     this.composer.addPass(this.renderScene);
@@ -643,7 +642,7 @@ export default {
       }
 
       this.geometry = new Three.IcosahedronGeometry(6, 3);
-      this.material = new Three.MeshPhongMaterial();
+      this.material = new Three.MeshBasicMaterial();
       this.galaxy = new Three.InstancedMesh(this.geometry, this.material, this.systems.length);
 
       const matrix = new Three.Matrix4();
