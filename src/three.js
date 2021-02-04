@@ -1,18 +1,18 @@
-const Three = require('three');
+const THREE = require('three');
 
-Three.Line2 = require('three/examples/jsm/lines/Line2').Line2;
-Three.LineGeometry = require('three/examples/jsm/lines/LineGeometry').LineGeometry;
-Three.LineMaterial = require('three/examples/jsm/lines/LineMaterial').LineMaterial;
-Three.OrbitControls = require('three/examples/jsm/controls/OrbitControls').OrbitControls;
-Three.STLLoader = require('three/examples/jsm/loaders/STLLoader').STLLoader;
+THREE.Line2 = require('three/examples/jsm/lines/Line2').Line2;
+THREE.LineGeometry = require('three/examples/jsm/lines/LineGeometry').LineGeometry;
+THREE.LineMaterial = require('three/examples/jsm/lines/LineMaterial').LineMaterial;
+THREE.OrbitControls = require('three/examples/jsm/controls/OrbitControls').OrbitControls;
+THREE.STLLoader = require('three/examples/jsm/loaders/STLLoader').STLLoader;
 
-Three.EffectComposer = require('three/examples/jsm/postprocessing/EffectComposer').EffectComposer;
-Three.RenderPass = require('three/examples/jsm/postprocessing/RenderPass').RenderPass;
-Three.UnrealBloomPass = require('three/examples/jsm/postprocessing/UnrealBloomPass').UnrealBloomPass;
+THREE.EffectComposer = require('three/examples/jsm/postprocessing/EffectComposer').EffectComposer;
+THREE.RenderPass = require('three/examples/jsm/postprocessing/RenderPass').RenderPass;
+THREE.UnrealBloomPass = require('three/examples/jsm/postprocessing/UnrealBloomPass').UnrealBloomPass;
 
 // TextGeometry
 function TextShapeGeometry (text, parameters) {
-  Three.Geometry.call(this);
+  THREE.Geometry.call(this);
 
   this.type = 'TextShapeGeometry';
 
@@ -25,7 +25,7 @@ function TextShapeGeometry (text, parameters) {
   this.mergeVertices();
 }
 
-TextShapeGeometry.prototype = Object.create(Three.Geometry.prototype);
+TextShapeGeometry.prototype = Object.create(THREE.Geometry.prototype);
 TextShapeGeometry.prototype.constructor = TextShapeGeometry;
 
 // TextShapeBufferGeometry
@@ -36,20 +36,20 @@ function TextShapeBufferGeometry (text, parameters) {
 
   if (!(font && font.isFont)) {
     console.error('THREE.TextShapeGeometry: font parameter is not an instance of THREE.Font.');
-    return new Three.Geometry();
+    return new THREE.Geometry();
   }
 
   const shapes = font.generateShapes(text, parameters.size);
 
-  Three.ShapeBufferGeometry.call(this, shapes);
+  THREE.ShapeBufferGeometry.call(this, shapes);
 
   this.type = 'TextShapeBufferGeometry';
 }
 
-TextShapeBufferGeometry.prototype = Object.create(Three.ShapeBufferGeometry.prototype);
+TextShapeBufferGeometry.prototype = Object.create(THREE.ShapeBufferGeometry.prototype);
 TextShapeBufferGeometry.prototype.constructor = TextShapeBufferGeometry;
 
-Three.TextShapeGeometry = TextShapeGeometry;
-Three.TextShapeBufferGeometry = TextShapeBufferGeometry;
+THREE.TextShapeGeometry = TextShapeGeometry;
+THREE.TextShapeBufferGeometry = TextShapeBufferGeometry;
 
-module.exports = Three;
+module.exports = THREE;

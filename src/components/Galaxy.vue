@@ -145,7 +145,7 @@
 
 <script>
 import state from '@/state';
-import * as Three from '@/three';
+import * as THREE from '@/three';
 import TWEEN from '@tweenjs/tween.js';
 
 const STELLAR_TYPES = [
@@ -312,22 +312,22 @@ const STELLAR_TYPES = [
 */
 
 const STELLAR_COLORS = {
-  W: new Three.Color(0xaabfff),
-  O: new Three.Color(0x0071c1),
-  B: new Three.Color(0xaabfff),
-  A: new Three.Color(0xcad7ff),
-  F: new Three.Color(0xf8f7ff),
-  G: new Three.Color(0xfff4ea),
-  K: new Three.Color(0xffd2a1),
-  M: new Three.Color(0xffcc6f),
-  C: new Three.Color(0xff5300),
-  S: new Three.Color(0xff9303),
-  L: new Three.Color(0xe817b9),
-  T: new Three.Color(0x3e0303),
-  D: new Three.Color(0x828ba4),
-  P: new Three.Color(0x00ffec),
-  NS: new Three.Color(0xffffff),
-  BH: new Three.Color(0x111111),
+  W: new THREE.Color(0xaabfff),
+  O: new THREE.Color(0x0071c1),
+  B: new THREE.Color(0xaabfff),
+  A: new THREE.Color(0xcad7ff),
+  F: new THREE.Color(0xf8f7ff),
+  G: new THREE.Color(0xfff4ea),
+  K: new THREE.Color(0xffd2a1),
+  M: new THREE.Color(0xffcc6f),
+  C: new THREE.Color(0xff5300),
+  S: new THREE.Color(0xff9303),
+  L: new THREE.Color(0xe817b9),
+  T: new THREE.Color(0x3e0303),
+  D: new THREE.Color(0x828ba4),
+  P: new THREE.Color(0x00ffec),
+  NS: new THREE.Color(0xffffff),
+  BH: new THREE.Color(0x111111),
 };
 
 const STELLAR_SIZES = {
@@ -447,42 +447,42 @@ export default {
     canvas.style.width = `${ this.width }px`;
     canvas.style.height = `${ this.height }px`;
 
-    Three.Object3D.DefaultUp = new Three.Vector3(0, 0, 1);
+    THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
-    this.renderer = new Three.WebGLRenderer({
+    this.renderer = new THREE.WebGLRenderer({
       antialias: true, canvas: this.$refs.canvas,
     });
     this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(0, 1);
     this.renderer.clear(true, true, true);
 
-    this.scene = new Three.Scene();
-    this.scene.add(new Three.HemisphereLight(0xffffff, 0xbbbbbb, 1));
-    // this.scene.add(new Three.AmbientLight(0xffffff));
+    this.scene = new THREE.Scene();
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbbb, 1));
+    // this.scene.add(new THREE.AmbientLight(0xffffff));
 
-    this.camera = new Three.PerspectiveCamera(60, this.width / this.height, 0.000000001, 100000000);
+    this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 0.000000001, 100000000);
     this.camera.position.set(0, -15000, 0);
 
-    this.controls = new Three.OrbitControls(this.camera, this.renderer.domElement);
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.addEventListener('change', () => {
       this.needsRender = true;
     });
     // this.controls.autoRotate = true;
     this.controls.update();
 
-    this.raycaster = new Three.Raycaster();
+    this.raycaster = new THREE.Raycaster();
 
-    this.renderScene = new Three.RenderPass(this.scene, this.camera);
-    this.bloomPass = new Three.UnrealBloomPass(new Three.Vector2(window.innerWidth, window.innerHeight),
+    this.renderScene = new THREE.RenderPass(this.scene, this.camera);
+    this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight),
       this.bloom.strength,
       this.bloom.radius,
       this.bloom.threshold);
 
-    this.composer = new Three.EffectComposer(this.renderer);
+    this.composer = new THREE.EffectComposer(this.renderer);
     this.composer.addPass(this.renderScene);
     this.composer.addPass(this.bloomPass);
 
-    this.loader = new Three.TextureLoader();
+    this.loader = new THREE.TextureLoader();
 
     this.texture = await this.asyncLoad(this.loader, 'smoke-v2.png');
 
@@ -510,7 +510,7 @@ export default {
       for (let i = 0; i < intersects.length; i++) {
         console.log('is galaxy', intersects[i].object === this.galaxy);
         if (intersects[i].instanceId) {
-          // this.galaxy.setColorAt(intersects[i].instanceId, new Three.Color(0xff0000));
+          // this.galaxy.setColorAt(intersects[i].instanceId, new THREE.Color(0xff0000));
           // this.galaxy.instanceColor.needsUpdate = true;
           console.log('current', this.controls.target);
           const distance = this.camera.position.distanceTo(this.controls.target);
@@ -641,11 +641,11 @@ export default {
         }
       }
 
-      this.geometry = new Three.IcosahedronGeometry(6, 3);
-      this.material = new Three.MeshBasicMaterial();
-      this.galaxy = new Three.InstancedMesh(this.geometry, this.material, this.systems.length);
+      this.geometry = new THREE.IcosahedronGeometry(6, 3);
+      this.material = new THREE.MeshBasicMaterial();
+      this.galaxy = new THREE.InstancedMesh(this.geometry, this.material, this.systems.length);
 
-      const matrix = new Three.Matrix4();
+      const matrix = new THREE.Matrix4();
       for (let i = 0; i < this.systems.length; i++) {
         matrix.makeScale(...this.systems[i].sun.size);
         matrix.setPosition(...this.vertices[i]);
@@ -659,17 +659,17 @@ export default {
 
       this.clouds = [];
 
-      const geometry = new Three.CircleBufferGeometry(this.spiralDistance * 40);
+      const geometry = new THREE.CircleBufferGeometry(this.spiralDistance * 40);
       for (let p = 0; p < 4; p++) {
-        const material = new Three.MeshStandardMaterial({
+        const material = new THREE.MeshStandardMaterial({
           map: this.texture,
           transparent: true,
-          side: Three.DoubleSide,
+          side: THREE.DoubleSide,
           depthTest: false,
-          color: new Three.Color(Math.random(), Math.random(), Math.random()),
+          color: new THREE.Color(Math.random(), Math.random(), Math.random()),
         });
 
-        const cloud = new Three.Mesh(geometry, material);
+        const cloud = new THREE.Mesh(geometry, material);
         cloud.position.set(0, 0, p);
 
         cloud.rotation.x = p / 360;
